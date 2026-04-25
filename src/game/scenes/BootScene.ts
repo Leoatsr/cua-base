@@ -43,6 +43,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image('tiles', 'assets/tilesets/tiles.png');
     this.load.tilemapTiledJSON('sproutown', 'assets/maps/sproutown.json');
 
+    // ---- Interior tilesets and maps ----
+    this.load.image('tiles-interior', 'assets/tilesets/tiles-interior.png');
+    this.load.tilemapTiledJSON('axiang-cottage', 'assets/maps/axiang-cottage.json');
+    this.load.tilemapTiledJSON('librarian-library', 'assets/maps/librarian-library.json');
+    this.load.tilemapTiledJSON('blacksmith-forge', 'assets/maps/blacksmith-forge.json');
+
     // ---- Audio ----
     this.load.audio('bgm-village', 'assets/audio/bgm-village.mp3');
     this.load.audio('sfx-dialogue', 'assets/audio/sfx-dialogue.mp3');

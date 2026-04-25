@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { NPC } from '../entities/NPC';
 import { SignPost } from '../entities/SignPost';
 import { EventBus } from '../EventBus';
+import type { InteriorConfig } from './InteriorScene';
 
 const PLAYER_SPEED = 140;
 const INTERACT_DISTANCE = 48;
@@ -15,6 +16,109 @@ const STORAGE_KEY_CORNERS = 'cua-yuanye-corners-v1';
 const STORAGE_KEY_BADGE = 'cua-yuanye-badge-v1';
 const STORAGE_KEY_ERRANDS = 'cua-yuanye-errands-v1';
 const STORAGE_KEY_LIBRARIAN_PAGES = 'cua-yuanye-librarian-pages-v1';
+
+/**
+ * Configuration for Axiang's cottage interior.
+ * Adding more cottages = adding more configs like this and more enter points
+ * in the door-detection block of update().
+ */
+const AXIANG_COTTAGE_CONFIG: InteriorConfig = {
+  mapKey: 'axiang-cottage',
+  tilesetKey: 'tiles-interior',
+  tilesetName: 'tiles-interior',
+  // Spawn near the door mat at the bottom (just inside the door)
+  spawnTileX: 6,
+  spawnTileY: 6,
+  // Exit point — the door mat tile
+  exitTileX: 6,
+  exitTileY: 7,
+  displayName: '阿降的小屋',
+  npcs: [
+    {
+      textureKey: 'axiang',
+      name: '老村长 · 阿降',
+      questId: 'axiang',
+      // Place him next to the table, facing down toward the door
+      tileX: 7,
+      tileY: 5,
+      facing: 'down',
+      dialogue: [
+        '哦，进来了。这屋子不大，随便看看。',
+        '（阿降坐在桌前，桌上摊着几张地图）',
+        '"你看这个——这是萌芽镇的全图。"',
+        '"东南角的水池，是镇子的眼。"',
+        '"西边的铁匠铺，将来要扩成工坊。"',
+        '"上面的典籍阁，会成为镇子的脑。"',
+        '...这镇子还小。但它会长大的。',
+      ],
+    },
+  ],
+};
+
+/**
+ * Librarian's library — scholarly room with bookshelf walls and a green rug.
+ */
+const LIBRARIAN_LIBRARY_CONFIG: InteriorConfig = {
+  mapKey: 'librarian-library',
+  tilesetKey: 'tiles-interior',
+  tilesetName: 'tiles-interior',
+  spawnTileX: 6,
+  spawnTileY: 6,
+  exitTileX: 6,
+  exitTileY: 7,
+  displayName: '典籍阁',
+  npcs: [
+    {
+      textureKey: 'librarian',
+      name: '图书管理员 · 蓁',
+      questId: 'librarian',
+      // She stands near the reading table on the green rug
+      tileX: 5,
+      tileY: 5,
+      facing: 'down',
+      dialogue: [
+        '...你来了。',
+        '（蓁抬起头，手上还拿着一本书）',
+        '"这里的书，比萌芽镇的人还多。"',
+        '"每一本都在等一个读者，每一个读者也在等一本书。"',
+        '"等典籍阁全开放的时候，你的名字也会在某一卷的扉页上。"',
+        '...慢慢看吧。',
+      ],
+    },
+  ],
+};
+
+/**
+ * Blacksmith's forge — stone-floored workshop with forge, anvil, and benches.
+ */
+const BLACKSMITH_FORGE_CONFIG: InteriorConfig = {
+  mapKey: 'blacksmith-forge',
+  tilesetKey: 'tiles-interior',
+  tilesetName: 'tiles-interior',
+  spawnTileX: 6,
+  spawnTileY: 6,
+  exitTileX: 6,
+  exitTileY: 7,
+  displayName: '铁匠铺',
+  npcs: [
+    {
+      textureKey: 'blacksmith',
+      name: '铁匠 · 老周',
+      questId: 'blacksmith',
+      // Standing next to the anvil, facing right toward where he'd swing
+      tileX: 4,
+      tileY: 5,
+      facing: 'right',
+      dialogue: [
+        '哎呀，进屋了？正好——',
+        '（老周拍了拍铁砧）"看见这家伙没？俺这一辈子的伙计。"',
+        '"炉子还在烧着——以后这工坊全开起来，你想要啥铁器，俺都能给你打。"',
+        '"剑、犁、铁锅、门钉......只要你说得出。"',
+        '不过现在嘛——还差几样工具。等萌芽镇再热闹热闹再说。',
+      ],
+    },
+  ],
+};
 
 interface Interactable {
   x: number;
@@ -121,8 +225,30 @@ export class MainScene extends Phaser.Scene {
   private sfxDialogue?: Phaser.Sound.BaseSound;
   private sfxHandlerBound = false;
 
+  // For returning from interior — set in init()
+  private spawnOverride: { x: number; y: number } | null = null;
+  // Door interaction — set in create() after player exists
+  private doorHint!: Phaser.GameObjects.Text;
+  // Lock input briefly after returning from interior
+  private inputLockUntil = 0;
+
   constructor() {
     super('Main');
+  }
+
+  init(data?: { returnX?: number; returnY?: number }) {
+    if (data && typeof data.returnX === 'number' && typeof data.returnY === 'number') {
+      this.spawnOverride = { x: data.returnX, y: data.returnY };
+    } else {
+      this.spawnOverride = null;
+    }
+    // Reset state for re-entry from interior
+    this.npcs = {};
+    this.signposts = [];
+    this.flowerSpots = [];
+    this.easterEggs = [];
+    this.corners = [];
+    this.bgmStarted = false;
   }
 
   create() {
@@ -146,11 +272,10 @@ export class MainScene extends Phaser.Scene {
     this.createCatAnims();
 
     // ---- Player ----
-    this.player = this.physics.add.sprite(
-      Math.floor(map.widthInPixels / 2),
-      Math.floor(map.heightInPixels / 2) + 32,
-      'player', 0
-    );
+    // If returning from an interior, spawn at the returnX/Y. Otherwise use default.
+    const spawnX = this.spawnOverride?.x ?? Math.floor(map.widthInPixels / 2);
+    const spawnY = this.spawnOverride?.y ?? (Math.floor(map.heightInPixels / 2) + 32);
+    this.player = this.physics.add.sprite(spawnX, spawnY, 'player', 0);
     this.player.setCollideWorldBounds(true);
     const pBody = this.player.body as Phaser.Physics.Arcade.Body;
     pBody.setSize(12, 6).setOffset(10, 17);
@@ -168,8 +293,10 @@ export class MainScene extends Phaser.Scene {
     const tile = (tx: number, ty: number) => ({ x: tx * 32 + 16, y: ty * 32 + 16 });
 
     // ---- NPCs ----
+    // Note: Axiang stands at (13, 6) — one tile south of the cottage door at (13, 5).
+    // The door tile (13, 5) is empty so the player can walk up to it and press E to enter.
     this.npcs.axiang = new NPC(this, {
-      ...tile(13, 5),
+      ...tile(13, 6),
       key: 'axiang', name: '老村长 · 阿降', texture: 'axiang',
       questId: 'axiang', facing: 'down',
       dialogue: () => this.getAxiangDialogue(),
@@ -177,7 +304,7 @@ export class MainScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.npcs.axiang);
 
     this.npcs.librarian = new NPC(this, {
-      ...tile(21, 5),
+      ...tile(21, 6),  // moved from (21, 5) — door is at (21, 5)
       key: 'librarian', name: '图书管理员 · 蓁', texture: 'librarian',
       questId: 'librarian', facing: 'down',
       dialogue: () => this.getLibrarianDialogue(),
@@ -185,7 +312,7 @@ export class MainScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.npcs.librarian);
 
     this.npcs.blacksmith = new NPC(this, {
-      ...tile(5, 14),
+      ...tile(5, 15),  // moved from (5, 14) — door is at (5, 14)
       key: 'blacksmith', name: '铁匠 · 老周', texture: 'blacksmith',
       questId: 'blacksmith', facing: 'right',
       dialogue: () => this.getBlacksmithDialogue(),
@@ -301,6 +428,21 @@ export class MainScene extends Phaser.Scene {
         padding: { left: 4, right: 4, top: 2, bottom: 2 },
       })
       .setOrigin(0.5).setVisible(false).setDepth(100);
+
+    // ---- Door hint (for entering buildings) ----
+    this.doorHint = this.add
+      .text(0, 0, '[E] 进入', {
+        fontFamily: 'sans-serif', fontSize: '11px',
+        color: '#ffffff', backgroundColor: '#5a3020dd',
+        padding: { left: 6, right: 6, top: 3, bottom: 3 },
+      })
+      .setOrigin(0.5).setVisible(false).setDepth(100);
+
+    // If returning from interior, fade in (and lock input briefly)
+    if (this.spawnOverride) {
+      this.cameras.main.fadeIn(300, 0, 0, 0);
+      this.inputLockUntil = this.time.now + 250;
+    }
 
     // ---- BGM ----
     if (this.cache.audio.exists('bgm-village')) {
@@ -940,9 +1082,65 @@ export class MainScene extends Phaser.Scene {
       }
     }
 
-    // ---- Proximity ----
+    // Lock input briefly after returning from interior
+    if (this.time.now < this.inputLockUntil) {
+      this.interactHint.setVisible(false);
+      this.doorHint.setVisible(false);
+      return;
+    }
+
+    // ---- Door check: each cottage has a door tile in front of its wall ----
+    // Door = the empty tile right below the wall row, between the building's columns.
+    // We check distance to each door and pick the closest if any are within range.
+    const doors: Array<{
+      x: number; y: number;
+      label: string;
+      enter: () => void;
+    }> = [
+      {
+        x: 13 * 32 + 16, y: 5 * 32 + 16,
+        label: '[E] 进入阿降的小屋',
+        enter: () => this.enterInterior(AXIANG_COTTAGE_CONFIG, 6),
+      },
+      {
+        x: 21 * 32 + 16, y: 5 * 32 + 16,
+        label: '[E] 进入典籍阁',
+        enter: () => this.enterInterior(LIBRARIAN_LIBRARY_CONFIG, 6),
+      },
+      {
+        x: 5 * 32 + 16, y: 14 * 32 + 16,
+        label: '[E] 进入铁匠铺',
+        enter: () => this.enterInterior(BLACKSMITH_FORGE_CONFIG, 15),
+      },
+    ];
+
+    let nearestDoor: typeof doors[0] | null = null;
+    let nearestDoorDist = 36; // detection radius
+    for (const door of doors) {
+      const d = Phaser.Math.Distance.Between(
+        this.player.x, this.player.y, door.x, door.y
+      );
+      if (d < nearestDoorDist) {
+        nearestDoorDist = d;
+        nearestDoor = door;
+      }
+    }
+
+    // ---- Proximity (NPCs etc) ----
     const closest = this.findClosestInteractable();
-    if (closest) {
+
+    if (nearestDoor) {
+      // Door takes precedence so players can always enter
+      this.doorHint
+        .setText(nearestDoor.label)
+        .setPosition(nearestDoor.x, nearestDoor.y - 24)
+        .setVisible(true);
+      this.interactHint.setVisible(false);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) {
+        nearestDoor.enter();
+      }
+    } else if (closest) {
+      this.doorHint.setVisible(false);
       this.interactHint
         .setPosition(closest.x, closest.y - 28)
         .setVisible(true);
@@ -951,6 +1149,25 @@ export class MainScene extends Phaser.Scene {
       }
     } else {
       this.interactHint.setVisible(false);
+      this.doorHint.setVisible(false);
     }
+  }
+
+  /**
+   * Generic interior entry. Pass the InteriorConfig and the y-tile to put the
+   * player at when they come back outside (one tile south of the door).
+   */
+  private enterInterior(config: InteriorConfig, returnTileY: number) {
+    const returnX = this.player.x;
+    const returnY = returnTileY * 32 + 16;
+
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.start('Interior', {
+        config,
+        returnX,
+        returnY,
+      });
+    });
   }
 }

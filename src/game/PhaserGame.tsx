@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { useEffect, useRef } from 'react';
 import { BootScene } from './scenes/BootScene';
 import { MainScene } from './scenes/MainScene';
+import { InteriorScene } from './scenes/InteriorScene';
 
 export function PhaserGame() {
   const gameRef = useRef<Phaser.Game | null>(null);
@@ -25,7 +26,7 @@ export function PhaserGame() {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
-      scene: [BootScene, MainScene],
+      scene: [BootScene, MainScene, InteriorScene],
     });
 
     return () => {
