@@ -9,11 +9,12 @@ export interface NPCConfig {
   x: number;
   y: number;
   texture: string;
-  dialogue: string[];
-  facing?: Facing;       // default 'down'
-  hideMark?: boolean;    // for non-character NPCs like signposts
-  markChar?: string;     // override the "!" character
-  questId?: string;      // optional ID for quest tracking
+  /** Dialogue lines, OR a function returning lines (for dynamic dialogue) */
+  dialogue: string[] | (() => string[]);
+  facing?: Facing;
+  hideMark?: boolean;
+  markChar?: string;
+  questId?: string;
 }
 
 export class NPC extends Phaser.Physics.Arcade.Sprite {
@@ -70,10 +71,28 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     super.destroy(fromScene);
   }
 
+  /**
+   * Change the floating mark character (e.g. from '!' to '?' to indicate
+   * a new task). Pass null/empty to hide.
+   */
+  setMark(char: string | null) {
+    if (!this.mark) return;
+    if (char === null || char === '') {
+      this.mark.setVisible(false);
+      this.markTween?.pause();
+    } else {
+      this.mark.setText(char);
+      this.mark.setVisible(true);
+      this.markTween?.resume();
+    }
+  }
+
   triggerDialogue() {
+    const dialogue = this.config.dialogue;
+    const lines = typeof dialogue === 'function' ? dialogue() : dialogue;
     EventBus.emit('show-dialogue', {
       name: this.config.name,
-      lines: this.config.dialogue,
+      lines,
       questId: this.config.questId,
     });
   }

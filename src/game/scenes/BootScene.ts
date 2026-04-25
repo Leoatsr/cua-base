@@ -11,7 +11,7 @@ export class BootScene extends Phaser.Scene {
       console.log(`Loading: ${Math.round(p * 100)}%`);
     });
 
-    // ---- Character sprites (Cute Fantasy: 6 cols × 10 rows of 32×32) ----
+    // ---- Character spritesheets (Cute Fantasy: 6 cols × 10 rows of 32×32) ----
     this.load.spritesheet('player', 'assets/sprites/player.png', {
       frameWidth: 32, frameHeight: 32,
     });
@@ -30,6 +30,14 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('fisher', 'assets/sprites/npc-fisher.png', {
       frameWidth: 32, frameHeight: 32,
     });
+
+    // ---- Cat (16×16, 4 idle frames) ----
+    this.load.spritesheet('cat', 'assets/sprites/cat.png', {
+      frameWidth: 16, frameHeight: 16,
+    });
+
+    // ---- Ore (16×16 single image) ----
+    this.load.image('ore', 'assets/sprites/ore.png');
 
     // ---- Tilemap ----
     this.load.image('tiles', 'assets/tilesets/tiles.png');
