@@ -5,4 +5,8 @@ export type { LevelInfo } from './useLevel';
 export { useGameTime } from './useGameTime';
 export { useOnlineCount } from './useOnlineCount';
 export { useChatMessages } from './useChatMessages';
+export { useChatHistory } from './useChatHistory';
 export { useToggleViaEventBus } from './useToggleViaEventBus';
+export { useCurrentScene } from './useCurrentScene';
+export { usePrivateConversations } from './usePrivateConversations';
+export { useUnreadCounts } from './useUnreadCounts';
