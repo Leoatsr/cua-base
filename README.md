@@ -1,225 +1,191 @@
-# Wave 2.5.C · 远见塔 / 功德堂 / 自家小屋 像素风重写
+# CUA 基地 · CUA Base
 
-UI 重构第 2 波 · 第 9 步 — **3 大展示型 panel 像素化**
+> _A pixel MMO for the WebAgentLab open-source community._
+>
+> 像素风浏览器游戏化协作平台 · 为 WebAgentLab 开源社区打造
 
----
-
-## 这一波做了什么
-
-### 3 个 panel 完全重写
-
-| Panel | 触发 | 功能 |
-|---|---|---|
-| `NewHomeWallPanel` | EventBus `open-home-wall` (HomeScene [E]) | 自家小屋纪念墙 · 个人成就时间轴（CV / 任务 / 提案 + GitHub avatar + level）|
-| `NewMeritBoardPanel` | EventBus `open-merit-board` (功德堂中央碑石 [E]) | 全站 CV 排行榜（Top 20 · 自己高亮 · 前 3 名金/银/铜大行排版）|
-| `NewRoadmapPanel` | EventBus `open-roadmap` (远见塔 [E]) | 5 阶段路线图（done/progress/todo + 进度条 + highlights + 阶段间箭头）|
-
-### 复用现有 store
-
-✅ 100% 兼容：
-- `cv.ts` (getTotalCV / getCVEntries)
-- `proposalStore.ts` (proposals 表查询)
-- `levelStore.ts` (fetchUserLevel)
-- `profileStore.ts` (fetchMyProfile)
-- `get_cv_leaderboard` RPC
-
-### 文件清单
-```
-🆕 src/lib/roadmapData.ts             (5 stages 数组 · 抽自旧 RoadmapPanel)
-🆕 src/hooks/useLeaderboard.ts        (含 estimateLevel)
-🆕 src/hooks/useHomeWallData.ts
-🆕 src/components/NewHomeWallPanel.tsx
-🆕 src/components/NewMeritBoardPanel.tsx
-🆕 src/components/NewRoadmapPanel.tsx
-🔄 src/hooks/index.ts (加 export)
-```
+[![ui-redesign](https://img.shields.io/badge/branch-ui--redesign-orange)](https://github.com/Leoatsr/cua-base/tree/ui-redesign)
+[![tech](https://img.shields.io/badge/tech-Vite_8_+_React_19_+_Phaser_3.90-blue)]()
+[![status](https://img.shields.io/badge/Wave_2-complete-green)]()
 
 ---
 
-## 安装
+## 这是什么
+
+**CUA 基地（CUA Base）**是一个像素风的浏览器协作平台 —— 用游戏化的方式让 Web Agent 开发者贡献、互动、参与治理。
+
+不是单机游戏。不是元宇宙。这是一个**协作工坊** —— 每完成一份真实贡献就有 CV 入账、有审核员复审、有同行投票。
+
+### 核心理念
+
+- **降噪** — 不打扰、不推送、不通知轰炸
+- **链接** — 用工坊系统让贡献者自然连接
+- **共创** — 每一份 commit / 论文 / Issue · 都看得到
+
+---
+
+## 项目状态
+
+🎉 **Wave 2 UI 重写完成（2026-04）** —— 16 个面板全部从黑底深色 UI 迁移到**像素古籍风**。
+
+- ✅ NewGameAppHUD（10 个 HUD 组件）
+- ✅ 7 大功能面板（Chat / Mail / Friends / Quest / 公告板 / 议政 / 远见塔 等）
+- ✅ 共享 UI 库（PixelPanel / PixelButton / Chip / Sprite / TileMap / Banner / Divider）
+- ✅ 设计系统（design-system.css · CSS vars · 像素古籍风）
+
+详见 [docs/wave-2-summary.md](./docs/wave-2-summary.md)
+
+---
+
+## 技术栈
+
+```
+Frontend:  Vite 8 + React 19 + TypeScript (strict)
+Game:      Phaser 3.90
+Realtime:  Supabase (Auth + Realtime + Postgres + RLS)
+Routing:   react-router-dom 7
+Errors:    Sentry
+Deploy:    Vercel
+Package:   pnpm
+```
+
+**编译验证命令**：
+
+```bash
+npx tsc --noEmit --verbatimModuleSyntax --noUnusedLocals --noUnusedParameters
+```
+
+---
+
+## 跑起来
+
+### 前置依赖
+
+- Node.js ≥ 20
+- pnpm ≥ 10
+- Supabase 账号（自己建一个免费 project）
+
+### 步骤
 
 ```powershell
-cd D:\projects\cua-base
+# 1. clone
+git clone https://github.com/Leoatsr/cua-base.git
+cd cua-base
+git checkout ui-redesign
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5c.zip"
-Test-Path $zip
+# 2. 装依赖
+pnpm install
 
-tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-5c\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-5c -Recurse -Force
+# 3. 配置环境变量（写 .env.local）
+# VITE_SUPABASE_URL=https://xxx.supabase.co
+# VITE_SUPABASE_ANON_KEY=eyJxxx
 
-# 验证
-Test-Path src\lib\roadmapData.ts
-Test-Path src\hooks\useLeaderboard.ts
-Test-Path src\hooks\useHomeWallData.ts
-Test-Path src\components\NewHomeWallPanel.tsx
-Test-Path src\components\NewMeritBoardPanel.tsx
-Test-Path src\components\NewRoadmapPanel.tsx
-```
-
-期望 6 个 `True`。
-
----
-
-## 必须手动改 src/App.tsx · 替换 3 个 panel
-
-```powershell
-cd D:\projects\cua-base
-
-Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5c -ErrorAction SilentlyContinue
-
-$content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
-
-# 加 imports
-$oldImport = "import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';"
-$newImport = "import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';`r`nimport { NewHomeWallPanel } from './components/NewHomeWallPanel';`r`nimport { NewMeritBoardPanel } from './components/NewMeritBoardPanel';`r`nimport { NewRoadmapPanel } from './components/NewRoadmapPanel';"
-$content = $content.Replace($oldImport, $newImport)
-
-# 替换 3 个旧 panel
-$content = $content -replace '<HomeWallPanel />', '<NewHomeWallPanel />'
-$content = $content -replace '<MeritBoardPanel />', '<NewMeritBoardPanel />'
-$content = $content -replace '<RoadmapPanel />', '<NewRoadmapPanel />'
-
-[System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
-
-# 验证
-Write-Host "=== imports（应 3 行）==="
-Select-String -Path src\App.tsx -Pattern "from './components/NewHomeWallPanel'|from './components/NewMeritBoardPanel'|from './components/NewRoadmapPanel'" | Format-Table LineNumber, Line
-
-Write-Host "=== 应只有 New 版（每个 1 行）==="
-Select-String -Path src\App.tsx -Pattern '<HomeWallPanel />|<NewHomeWallPanel />' | Format-Table LineNumber, Line
-Select-String -Path src\App.tsx -Pattern '<MeritBoardPanel />|<NewMeritBoardPanel />' | Format-Table LineNumber, Line
-Select-String -Path src\App.tsx -Pattern '<RoadmapPanel />|<NewRoadmapPanel />' | Format-Table LineNumber, Line
-```
-
----
-
-## 跑 + 测试
-
-```powershell
+# 4. 跑
 pnpm dev
 ```
 
-打开 `http://localhost:5173/play` 登录进游戏。
-
-### F12 Console 直接触发（最快）
-
-```javascript
-// 像 Wave 2.5.B 一样
-import('/src/game/EventBus.ts').then(m => {
-  window.__EventBus = m.EventBus;
-  // 测试 3 个：
-  m.EventBus.emit('open-home-wall')      // 自家小屋
-  // m.EventBus.emit('open-merit-board')  // 功德堂
-  // m.EventBus.emit('open-roadmap')      // 远见塔
-});
-```
-
-或在游戏里走到对应场景按 [E]：
-- 自家小屋（HomeScene 的墙）
-- 功德堂（GongdeTangScene 中央碑石）
-- 远见塔（VisionTowerScene）
+打开 `http://localhost:5173/`。
 
 ---
 
-## 测试清单
+## 主要功能
 
-### NewHomeWallPanel · 自家小屋
-```
-☐ 1. F12 → EventBus.emit('open-home-wall') → 像素风面板（600×620）
-☐ 2. 看到个人卡片：GitHub avatar + 名字 + L? + 总 CV
-☐ 3. Stat 行：任务数 · 提案数 · 通过数
-☐ 4. "完成任务" section: 时间轴卡（金色左边线 · 任务名 · 工坊 · +CP）
-☐ 5. 任务卡按时间倒序 · 显示最近 10 条
-☐ 6. "创建的提案" section: 类别 chip + outcome chip + 标题 + 投票数
-☐ 7. 未登录 → "请先用 GitHub 登录"
-☐ 8. ESC 关闭
-```
+### 🌱 萌芽镇（Phase 1 · 已完成）
+- 9 大角色变量
+- 阿降 NPC + 引导教程
+- 典籍阁 / 铁匠铺 / 阿降小屋
+- 萌芽印记成长系统
 
-### NewMeritBoardPanel · 功德堂
-```
-☐ 9. F12 → EventBus.emit('open-merit-board') → 像素风面板（540×620）
-☐ 10. 看到 "功德堂 · 贡献者排行" 标题 + "碑上无虚名 · 上石必有功"
-☐ 11. 前 3 名大行排版（金/银/铜边框 + 🥇🥈🥉）
-☐ 12. 第 4 名后 · 普通行
-☐ 13. 自己的行高亮（金色边框 + "我" chip）
-☐ 14. 不在 Top 20 → 底部显示 "你不在前 20"
-☐ 15. ↻ 按钮 · 手动刷新
-☐ 16. 加载中 → "正在录入功德......"
-☐ 17. 加载失败 → "读取失败 · 请稍后再试"
-```
+### 🛠 共创之都（Phase 2 · 进行中）
+- **百晓居首工坊** · 5 真任务：
+  - 单篇论文入库（10–15 CV）
+  - 作者/机构卡片完善（5 CV）
+  - 单周数据质量抽查（50 CV）
+  - 自动化抓取脚本（150–300 CV）
+  - 季度技术版图研判（200–300 CV）
+- 任务提交 / 撤回（3 分钟窗口） / 3 审核员投票 / 申诉闭环
+- CV 入账 + 邮件系统
 
-### NewRoadmapPanel · 远见塔
-```
-☐ 18. F12 → EventBus.emit('open-roadmap') → 像素风面板（600×620）
-☐ 19. Header："远见塔 · 五阶路线图"
-☐ 20. 总览 chip：已完成 1 / 进行中 2 / 待开始 2
-☐ 21. 5 阶段卡：萌芽镇 / 共创之都 / 议政高地 / 真任务源 / 多人在场
-☐ 22. 每阶段：phase label + 名字 + 状态 chip + 描述 + 进度条 + highlights
-☐ 23. done 状态：绿色边框 + 100% 进度
-☐ 24. progress 状态：金色边框 + 进度条（百分比）
-☐ 25. todo 状态：灰色边框 + opacity 0.85
-☐ 26. 阶段间箭头 ↓
-☐ 27. ESC 关闭
-```
+### 🏛 议政高地（Phase 4 · 进行中）
+- **议政厅** · 提案投票（5 类别 + 4 时长 · L2 mentor 守门 · L1 投票）
+- **明镜阁** · 申诉案桌（3 复审员独立评议 · 只上调不下调）
+- **远见塔** · 5 阶段路线图（you are here）
 
-### 兼容性检查
+### 🏆 功德堂（Phase 4 · 进行中）
+- CV 排行榜（Top 20 · 自己高亮）
+
+### 🏠 自家小屋（Phase 1 · 已完成）
+- 个人成就时间轴（CV / 任务 / 提案）
+
+---
+
+## 键盘快捷键
+
+| 键 | 功能 |
+|---|---|
+| `T` | 打开聊天 |
+| `K` | 打开邮件 |
+| `F` | 打开好友 |
+| `J` | 打开任务日志 |
+| `P` | 打开个人资料 |
+| `E` | 与 NPC / 设施交互（在游戏内） |
+| `Esc` | 关闭当前面板 |
+
+底部 5 图标按钮（NewGameAppHUD）：📜 公告 · 📋 任务 · ✉ 邮件 · 💬 聊天 · 👥 好友
+
+---
+
+## 项目结构
+
 ```
-☐ 旧 HomeWallPanel / MeritBoardPanel / RoadmapPanel 文件保留
-☐ Phaser 内 [E] 交互仍触发对应 panel（开新版）
-☐ 自家小屋墙 / 功德堂碑石 / 远见塔 NPC 互动正常
-☐ Mail / Chat / Friends / QuestLog / Announcement / 议政 全部仍能开
+cua-base/
+├── src/
+│   ├── components/    # 共享 UI 组件（28 个 NewXxx 面板）
+│   ├── ui/             # 像素 UI 库（PixelPanel / PixelButton / Chip ...）
+│   ├── ui/hud/         # NewGameAppHUD 子组件（AvatarPanel / CVBar / IconBar ...）
+│   ├── hooks/          # React hooks（useProfile / useCV / useLevel / useChatMessages ...）
+│   ├── pages/          # 路由页面（LandingPage / NewGameAppHUD / ManualPage ...）
+│   ├── lib/            # 数据 store（chatStore / questStore / proposalStore ...）
+│   ├── game/           # Phaser 场景 + EventBus
+│   └── styles/         # design-system.css
+├── docs/               # 开发文档（wave-2-summary.md ...）
+└── sql/                # Supabase migration（25 个 .sql 文件）
 ```
 
 ---
 
-## ⚠️ 已知限制
+## 设计系统
 
-- ⚠️ **MeritBoardPanel 等级估算**：不含 proposal_count（RPC 不返回）· L3+ 无法准确显示 · 用 estimateLevel 函数兜底
-- ⚠️ **HomeWallPanel CV entries 限制 10 条**：避免长时间用户列表过长 · 可后续加 "查看全部"
-- ⚠️ **RoadmapPanel 数据硬编码**：5 stages 在 `lib/roadmapData.ts` · 改阶段需要改代码
+像素古籍风 · 受**宋代雕版印刷**启发：
+
+- **配色** · paper-0/1/2/3（米黄）+ wood-1/2/3/4（深木色）+ gold（鎏金）+ ink（墨黑）
+- **字体** · `Ma Shan Zheng`（标题）/ `ZCOOL XiaoWei`（标题次）/ `霞鹜文楷`（正文）/ `Inter`（数字）
+- **像素 vs 古籍** · 边框使用像素角（::before/::after 4×4 木色方块） · 整体保持古籍纸质感
+- **行距** · 正文 1.7 · 古籍呼吸感
+
+详见 `src/styles/design-system.css`。
 
 ---
 
-## ⚠️ 紧急回滚
+## 贡献
 
-```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5c src\App.tsx
+CUA 基地是为 WebAgentLab 社区打造的 —— 欢迎提 Issue · 欢迎 PR · 欢迎来玩。
+
+```
+GitHub: https://github.com/Leoatsr/cua-base
+社区:    WebAgentLab
+作者:    Leoatsr
 ```
 
 ---
 
-## Push
+## 相关项目
 
-```powershell
-git add .
-git commit -m "Wave 2.5.C: HomeWall/MeritBoard/Roadmap pixel rewrite
-
-- NewHomeWallPanel (600x620): personal achievements timeline
-  - GitHub avatar + name + level + total CV
-  - CV entries (gold left border)
-  - Created proposals (with outcome chips)
-- NewMeritBoardPanel (540x620): CV leaderboard
-  - Top 3 gold/silver/bronze big rows
-  - Rank 4+ compact rows
-  - Self-highlight + 'not in top 20' hint
-- NewRoadmapPanel (600x620): 5-stage roadmap
-  - done/progress/todo with progress bar + highlights
-  - Stages connected with ↓ arrows
-- 3 new hooks: useHomeWallData / useLeaderboard / (estimateLevel)
-- Extracted STAGES to src/lib/roadmapData.ts
-- Old 3 panels preserved (Wave 2.6 cleanup)"
-
-git push
-```
+- 🌸 [花信风 (HuaXinFeng)](https://github.com/Leoatsr/HUAXIN) · 传统 24 番花信风物候地图
+- 📜 [唐代诗人足迹地图](https://github.com/Leoatsr/zujiditu) · 40 唐代诗人 462 足迹
 
 ---
 
-## 下一波 · 强烈推荐 Wave 2.6 收尾
+## License
 
-回我**一个**：
-
-- **"完成 · 进 Wave 2.6 收尾"** ✅ 推荐 = 删 30+ 旧组件 + App.tsx 清理 + 整体测试
-- **"完成 · 进 Wave 2.5.A.3"** = QuestLog 审核流像素化（3-4h · 锦上添花）
-- **"完成 · 暂停找用户测"**
-- **"调整某处"** + 写出
+MIT
