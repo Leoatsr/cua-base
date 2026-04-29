@@ -16,3 +16,4 @@ export { useFollows } from './useFollows';
 export { useOpenViaEventBus } from './useOpenViaEventBus';
 export { useAnnouncements } from './useAnnouncements';
 export { useQuestStates } from './useQuestStates';
+export { useProposals } from './useProposals';

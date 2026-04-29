@@ -1,34 +1,37 @@
-# Wave 2.5.A.2 · NewQuestLog 视觉壳重写（80%）
+# Wave 2.5.B · 议政 3 panel 像素风重写
 
-UI 重构第 2 波 · 第 7 步 — **任务日志像素化**
+UI 重构第 2 波 · 第 8 步 — **议政厅 + 申诉案桌**
 
 ---
 
 ## 这一波做了什么
 
-### 范围（80% 视觉）
+### 3 个 panel 完全重写
 
-✅ 完全重写：
-- 任务列表 + 4 status tab（可接 / 进行中 / 审核中 / 已完成）
-- 任务卡片（标题 / 工坊 / CP / 难度 / 折叠详情）
-- 接受任务 → `acceptQuest` API
-- 提交表单（URL + 自评 + 评分细则提示）→ `confirmSubmit` + 启动 reviewer
-- 撤回（reviewing 状态 + 倒计时未到）→ `withdrawSubmission` + `cancelScheduledVotes`
-- 状态特定显示（已提交链接 / 撤回倒计时 / CV 入账金额）
+| Panel | 触发 | 功能 |
+|---|---|---|
+| `NewCreateProposalPanel` | EventBus `open-create-proposal` | 新建提案（标题 + 描述 + 5 类别 + 4 时长选项 · L2 守门）|
+| `NewProposalListPanel` | EventBus `open-proposal-list` | 提案列表（公示中/已决议 2 tab + 类别筛选）+ 投票（赞/反/弃 + 备注 · L1 守门）|
+| `NewAppealDeskPanel` | EventBus `open-appeal-desk` | 任务申诉案桌（明镜阁）· 列出可申诉任务 + 发起申诉 |
 
-⏳ 沿用旧版逻辑（Wave 2.5.A.3+ 重写）：
-- ❌ 审核员投票动画（仅静态显示 N/3 进度）
-- ❌ 申诉流（仅 chip 显示 "申诉处理中"）
-- ❌ CV 入账动画（仅静态金额）
-- ❌ 撤回 1s tick 实时刷新（依赖 React HMR · 状态变化时刷新）
+### 复用现有 store API
+
+✅ 100% 兼容 `proposalStore.ts`：
+- createProposal / castVote / withdrawVote / getMyVote
+- listOpenProposals / listClosedProposals / finalizeOverdueProposals
+- subscribeProposalChanges (realtime)
+
+✅ 100% 兼容 `questStore.ts` + `appealReviewers.ts`：
+- 申诉数据完全跟旧 AppealDeskPanel 一致
+- 用 startAppealState + scheduleAppealVotes
+- 沿用 ReviewProcessor / AppealProcessor 的事件链
 
 ### 文件清单
 ```
-🆕 src/lib/questDefinitions.ts          (5 任务数组 · 抽自旧 QuestLog)
-🆕 src/hooks/useQuestStates.ts
-🆕 src/components/QuestCard.tsx
-🆕 src/components/SubmissionForm.tsx
-🆕 src/components/NewQuestLog.tsx
+🆕 src/hooks/useProposals.ts
+🆕 src/components/NewCreateProposalPanel.tsx
+🆕 src/components/NewProposalListPanel.tsx
+🆕 src/components/NewAppealDeskPanel.tsx
 🔄 src/hooks/index.ts (加 export)
 ```
 
@@ -39,56 +42,53 @@ UI 重构第 2 波 · 第 7 步 — **任务日志像素化**
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a2.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5b.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-5a2\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-5a2 -Recurse -Force
+Copy-Item -Path .\cua-spike-wave2-5b\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-5b -Recurse -Force
 
 # 验证
-Test-Path src\lib\questDefinitions.ts
-Test-Path src\hooks\useQuestStates.ts
-Test-Path src\components\QuestCard.tsx
-Test-Path src\components\SubmissionForm.tsx
-Test-Path src\components\NewQuestLog.tsx
+Test-Path src\hooks\useProposals.ts
+Test-Path src\components\NewCreateProposalPanel.tsx
+Test-Path src\components\NewProposalListPanel.tsx
+Test-Path src\components\NewAppealDeskPanel.tsx
 ```
 
-期望 5 个 `True`。
+期望 4 个 `True`。
 
 ---
 
-## 必须手动改 src/App.tsx · 替换 QuestLog
+## 必须手动改 src/App.tsx · 替换 3 个 panel
 
 ```powershell
 cd D:\projects\cua-base
 
-Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5a2 -ErrorAction SilentlyContinue
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5b -ErrorAction SilentlyContinue
 
 $content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
 
-# 加 import
-$oldImport = "import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';"
-$newImport = "import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';`r`nimport { NewQuestLog } from './components/NewQuestLog';"
+# 加 imports
+$oldImport = "import { NewQuestLog } from './components/NewQuestLog';"
+$newImport = "import { NewQuestLog } from './components/NewQuestLog';`r`nimport { NewCreateProposalPanel } from './components/NewCreateProposalPanel';`r`nimport { NewProposalListPanel } from './components/NewProposalListPanel';`r`nimport { NewAppealDeskPanel } from './components/NewAppealDeskPanel';"
 $content = $content.Replace($oldImport, $newImport)
 
-# 替换 <QuestLog /> → <NewQuestLog />
-$content = $content -replace '<QuestLog />', '<NewQuestLog />'
-
-# 同时移除桥接器（NewQuestLog 自己监听 toggle-panel 了）
-$content = $content -replace '\s*<PanelToggleBridge />', ''
+# 替换 3 个旧 panel
+$content = $content -replace '<CreateProposalPanel />', '<NewCreateProposalPanel />'
+$content = $content -replace '<ProposalListPanel />', '<NewProposalListPanel />'
+$content = $content -replace '<AppealDeskPanel />', '<NewAppealDeskPanel />'
 
 [System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
 
 # 验证
-Write-Host "=== imports ==="
-Select-String -Path src\App.tsx -Pattern "from './components/NewQuestLog'" | Format-Table LineNumber, Line
+Write-Host "=== imports（应 3 行）==="
+Select-String -Path src\App.tsx -Pattern "from './components/NewCreateProposalPanel'|from './components/NewProposalListPanel'|from './components/NewAppealDeskPanel'" | Format-Table LineNumber, Line
 
-Write-Host "=== 应只有 NewQuestLog · 0 个 QuestLog ==="
-Select-String -Path src\App.tsx -Pattern '<QuestLog />|<NewQuestLog />' | Format-Table LineNumber, Line
-
-Write-Host "=== PanelToggleBridge 应已移除 ==="
-Select-String -Path src\App.tsx -Pattern '<PanelToggleBridge />' | Format-Table LineNumber, Line
+Write-Host "=== 应只有 New 版 · 0 个旧版 ==="
+Select-String -Path src\App.tsx -Pattern '<CreateProposalPanel />|<NewCreateProposalPanel />' | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern '<ProposalListPanel />|<NewProposalListPanel />' | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern '<AppealDeskPanel />|<NewAppealDeskPanel />' | Format-Table LineNumber, Line
 ```
 
 ---
@@ -101,60 +101,100 @@ pnpm dev
 
 打开 `http://localhost:5173/play` 登录进游戏。
 
-按 **J 键** → 像素风任务日志（540×600）
+### 测试入口
 
-或点 NewGameAppHUD 左下 📋 任务图标。
+议政厅在游戏里通过 [E] 键交互（议政高地 GovHill 场景的讲坛）：
+- **新提案** · 议政高地讲坛 [E] → CreateProposalPanel · 需 L2
+- **看提案** · 议政高地公告板 [E] → ProposalListPanel
+- **申诉** · 明镜阁 MirrorPavilion 案桌 [E] → AppealDeskPanel
+
+或用 F12 Console 直接触发：
+```javascript
+// 测试新建提案
+window.eventBus?.emit('open-create-proposal');
+// 或 (旧式)
+EventBus.emit('open-create-proposal')
+```
+
+测试 3 个 panel：
+
+```javascript
+EventBus.emit('open-create-proposal')   // 新建提案
+EventBus.emit('open-proposal-list')     // 提案列表
+EventBus.emit('open-appeal-desk')       // 申诉案桌
+```
 
 ---
 
 ## 测试清单
 
+### NewCreateProposalPanel（L2 守门）
 ```
-☐ 1. J 键打开 → 像素风任务日志（540×600）
-☐ 2. 看到 4 tab：可接 / 进行中 / 审核中 / 已完成
-☐ 3. 默认在 "可接" tab · 看到 5 任务（百晓居）
-☐ 4. 点任务卡 → 展开详情（描述 + 质量评分 + 验收标准）
-☐ 5. 点 "接受" 按钮 → 任务移到 "进行中" tab
-☐ 6. 进行中 tab 看到任务 · 点 "提交作品"
-☐ 7. 提交表单：URL 输入 + x0.5/x1.0/x2.0 自评 + 评分细则
-☐ 8. 输入 https://example.com → 显示 "占位链接不能用于真实提交"
-☐ 9. 输入有效 https://github.com/xxx/yyy → 点 "确认提交"
-☐ 10. 任务移到 "审核中" tab
-☐ 11. 看到提交链接 + 自评 chip + "可撤回 N s" 倒计时（3 分钟内）
-☐ 12. 3 分钟内点 "撤回" → 任务回到 "进行中"（草稿保留）
-☐ 13. 等审核员投票 → 静态进度 N/3
-☐ 14. 完成后 → 任务移到 "已完成" tab + CV 入账金额显示
-☐ 15. ESC 关闭面板
-☐ 16. ESC 在提交表单里 → 先关表单 · 再按一次关面板
-☐ 17. 点 NewGameAppHUD 左下 📋 → 切换面板
-☐ 18. 点 NewGameAppHUD 左下 📜 公告 → 公告板（不冲突）
+☐ 1. F12 → EventBus.emit('open-create-proposal') → 像素风面板出现
+☐ 2. 看到标题输入 / 5 类别按钮 / 描述区 / 4 时长按钮
+☐ 3. 标题字符计数 / 描述字符计数
+☐ 4. 类别选择高亮金色
+☐ 5. 时长 "3 天" 默认选中
+☐ 6. 短描述 → 验证错误提示
+☐ 7. 点 "发起提案" · 如果 L<2 → 显示 "等级不足"
+☐ 8. L≥2 → 显示成功 + 1.5s 后关闭
+☐ 9. ESC 关闭（提交中不能关）
+```
+
+### NewProposalListPanel
+```
+☐ 10. F12 → EventBus.emit('open-proposal-list') → 像素风面板（600×620）
+☐ 11. 看到 2 tab：公示中 / 已决议
+☐ 12. 类别筛选条（6 个按钮：全部 / 5 类别）
+☐ 13. 左 sidebar 列表（220px）
+☐ 14. 点提案项 → 右侧详情显示
+☐ 15. 详情：类别 chip / 标题 / 作者 / 倒计时
+☐ 16. 详情：描述（whitespace 保留）+ 投票统计条
+☐ 17. 投票按钮：✓赞成 / ✗反对 / ⊘弃权 / 撤票
+☐ 18. 加备注（可选）
+☐ 19. 投票 · 如果 L<1 → "等级不足"
+☐ 20. 投票后 → 自己的票显示在详情区
+☐ 21. 投票统计实时更新（subscribeProposalChanges 触发）
+☐ 22. 已决议 tab → 没有投票按钮 + 显示 outcome chip
+☐ 23. 顶部 "+ 新提案" → 触发 NewCreateProposalPanel
+☐ 24. 自动 finalizeOverdueProposals · 如有关闭显示 "已结案 N"
+```
+
+### NewAppealDeskPanel
+```
+☐ 25. F12 → EventBus.emit('open-appeal-desk') → 像素风面板
+☐ 26. 看到 "明镜阁 · 申诉案桌" 标题 + 副标题
+☐ 27. 待申诉列表（status='submitted' + !appealed + 有 finalCoeff）
+☐ 28. 已申诉历史（按结果显示：上调/维持/驳回）
+☐ 29. 点 "发起申诉" → 确认页（自评 vs 评审 + 入账 CV + 申诉规则）
+☐ 30. 点 "确认申诉" → toast 提示 + 关闭面板 + 调度 3 复审员
+☐ 31. 点 "再想想" → 回列表
+☐ 32. ESC 在确认页 · 先回列表 · 再按一次关面板
 ```
 
 ### 兼容性检查
 ```
-☐ 旧 QuestLog 文件保留（src/components/QuestLog.tsx 还在 · Wave 2.6 删）
-☐ Chat（T）/ Mail（K）/ Friends（F）/ Profile（P）/ Announcement（点 5 图标 📜）仍能开
-☐ 教程 / 节气 banner / 通知 toast 仍正常
-☐ Phaser 多人在场仍正常
-☐ ReviewProcessor / AppealProcessor headless 组件仍正常监听
-☐ CV 入账时 cv-updated EventBus 触发 · NewGameAppHUD 左上 CVBar 实时刷新
+☐ 旧 CreateProposalPanel / ProposalListPanel / AppealDeskPanel 文件保留
+☐ Phaser 内 [E] 交互仍触发对应 panel（开新版）
+☐ 议政高地 / 明镜阁 场景的 NPC 互动正常
+☐ ReviewProcessor / AppealProcessor headless 组件仍正常
+☐ Mail（K）/ Chat（T）/ Friends（F）/ QuestLog（J）仍能开
 ```
 
 ---
 
-## ⚠️ 已知限制（Wave 2.5.A.2 · 故意）
+## ⚠️ 已知限制
 
-- ⚠️ **撤回倒计时不实时**：状态变化时才刷新（旧版有 1s tick）· 影响小
-- ⚠️ **审核进度静态**：N/3 只显示 · 没有动画
-- ⚠️ **申诉无法操作**：appealing 状态显示但没有按钮（沿用旧版需进 ReviewPanel）
-- ⚠️ **CV 入账无动画**：直接显示金额（CVBar 会有金光动画）
+- ⚠️ **没有 [E] 键提示像素化** — Phaser 内的 [E] 交互悬浮提示是 Phaser 渲染，不是 React
+- ⚠️ **议政厅 NPC 对话** 仍是旧版 DialogueBox · Wave 2.6 后续看
+- ⚠️ **L0 用户**看不到议政内容（所有 panel 都需要至少 L1）
 
 ---
 
 ## ⚠️ 紧急回滚
 
 ```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5a2 src\App.tsx
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5b src\App.tsx
 ```
 
 ---
@@ -163,16 +203,14 @@ Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5a2 src\App.tsx
 
 ```powershell
 git add .
-git commit -m "Wave 2.5.A.2: NewQuestLog 80% pixel rewrite
+git commit -m "Wave 2.5.B: Council Hall 3 panels pixel rewrite
 
-- Extracted QUESTS array to src/lib/questDefinitions.ts
-- New pixel quest log (540x600) with 4 status tabs
-- QuestCard component with foldable details
-- SubmissionForm: URL + self-rate + reviewer scheduling
-- Withdraw button (3min window) + cancelScheduledVotes
-- Real-time questStore subscription via useSyncExternalStore
-- Old QuestLog preserved (1052 lines, Wave 2.6 cleanup)
-- Removed PanelToggleBridge (NewQuestLog handles toggle-panel directly)"
+- NewCreateProposalPanel (540x600): title + 5 categories + 4 durations + L2 gate
+- NewProposalListPanel (600x620): list + filter + vote bar + comment
+- NewAppealDeskPanel (540x600): appealable + history + confirm form
+- useProposals hook: realtime subscription + lazy finalize on open
+- 100% compatible with proposalStore / questStore APIs
+- Old 3 panels preserved (Wave 2.6 cleanup)"
 
 git push
 ```
@@ -181,13 +219,9 @@ git push
 
 ## 下一波
 
-Wave 2.5.A 系列基本完成（公告板 + QuestLog 80% 视觉）。
-
 回我**一个**：
 
-- **"完成 · 进 Wave 2.5.A.3"** = 审核员投票流像素化（3-4h）
-- **"完成 · 进 Wave 2.5.B"** = 议政 3 panel（4-5h）
 - **"完成 · 进 Wave 2.5.C"** = 远见塔/功德堂/路线图（3-4h）
-- **"完成 · 进 Wave 2.6 收尾"** = 删旧组件 + 清理（2-3h）
+- **"完成 · 进 Wave 2.6 收尾"** = 删旧组件 + 整体测试（2-3h · 推荐）
 - **"完成 · 暂停找用户测"**
 - **"调整某处"** + 写出

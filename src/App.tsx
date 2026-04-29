@@ -86,6 +86,9 @@ import { NewMailBox } from './components/NewMailBox';
 import { NewFriendsPanel } from './components/NewFriendsPanel';
 import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';
 import { NewQuestLog } from './components/NewQuestLog';
+import { NewCreateProposalPanel } from './components/NewCreateProposalPanel';
+import { NewProposalListPanel } from './components/NewProposalListPanel';
+import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';
 import { PanelToggleBridge } from './components/PanelToggleBridge';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
@@ -223,9 +226,9 @@ function MainGameApp() {
             <ReviewBadge />
             <ReviewPanel />
             <RoadmapPanel />
-            <AppealDeskPanel />
-            <CreateProposalPanel />
-            <ProposalListPanel />
+            <NewAppealDeskPanel />
+            <NewCreateProposalPanel />
+            <NewProposalListPanel />
             <HomeWallPanel />
             <MeritBoardPanel />
             <LevelUpAnimation />
