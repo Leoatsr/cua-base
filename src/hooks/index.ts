@@ -10,3 +10,7 @@ export { useToggleViaEventBus } from './useToggleViaEventBus';
 export { useCurrentScene } from './useCurrentScene';
 export { usePrivateConversations } from './usePrivateConversations';
 export { useUnreadCounts } from './useUnreadCounts';
+export { useMail } from './useMail';
+export { useFriends } from './useFriends';
+export { useFollows } from './useFollows';
+export { useOpenViaEventBus } from './useOpenViaEventBus';

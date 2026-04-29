@@ -82,6 +82,8 @@ import { ManualPage, CodexPage, MapsPage } from './pages/ComingSoon';
 import { GameViewPreview } from './pages/GameViewPreview';
 import { NewGameAppHUD } from './pages/NewGameAppHUD';
 import { NewChatPanel } from './components/NewChatPanel';
+import { NewMailBox } from './components/NewMailBox';
+import { NewFriendsPanel } from './components/NewFriendsPanel';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -213,7 +215,7 @@ function MainGameApp() {
             <DialogueBox />
             <WorldMap />
             <QuestLog />
-            <MailBox />
+            <NewMailBox />
             <MailBadge />
             <ReviewBadge />
             <ReviewPanel />
@@ -240,7 +242,7 @@ function MainGameApp() {
             <NotificationPanel />
             <NotificationKeyListener />
             <NotificationBadge />
-            <FriendsPanel />
+            <NewFriendsPanel />
             <FriendsKeyListener />
             <EmotePanel />
             <EmoteOverlay />
