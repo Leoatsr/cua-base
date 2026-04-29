@@ -70,7 +70,7 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
           animation: 'titleFadeIn 1.6s ease-out',
         }}
       >
-        SOURCE · VALLEY
+        降噪 · 链接 · 共创
       </div>
 
       {/* 装饰线 */}
