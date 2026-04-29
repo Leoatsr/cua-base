@@ -79,6 +79,8 @@ import { SentryErrorBoundary } from './lib/sentry';
 import { startUserTracker } from './lib/userTracker';
 import { LandingPage } from './pages/Landing';
 import { ManualPage, CodexPage, MapsPage } from './pages/ComingSoon';
+import { GameViewPreview } from './pages/GameViewPreview';
+import { NewGameAppHUD } from './pages/NewGameAppHUD';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -195,6 +197,7 @@ function MainGameApp() {
   return (
     <>
       <PhaserGame />
+      <NewGameAppHUD visible={gameStarted} />
 
       <SentryErrorBoundary
         fallback={({ error, resetError }) => (
@@ -203,8 +206,6 @@ function MainGameApp() {
       >
         {gameStarted && (
           <>
-            <HUD />
-            <CVDisplay />
             <AuthBadge />
             <QuestPanel />
             <TitleList />
@@ -221,7 +222,6 @@ function MainGameApp() {
             <ProposalListPanel />
             <HomeWallPanel />
             <MeritBoardPanel />
-            <LevelBadge />
             <LevelUpAnimation />
             <FaceCustomizer />
             <ProfilePanel />
@@ -249,7 +249,6 @@ function MainGameApp() {
             <HelpButton />
             <TutorialOverlay />
             <TimeOverlay />
-            <TimeHUD />
             <TimeSettingsButton />
             <NpcGreetingToast />
             <SolarTermBanner />
@@ -312,6 +311,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/play" element={<MainGameApp />} />
+        <Route path="/play-new" element={<GameViewPreview />} />
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/codex" element={<CodexPage />} />
         <Route path="/maps" element={<MapsPage />} />

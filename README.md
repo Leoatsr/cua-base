@@ -1,129 +1,31 @@
-# Wave 1 · 设计系统 + Landing 页 + React Router
+# Wave 2.2.A · 真数据接通 + /play 替换
 
-UI 重构第 1 波 · 4-5h 工作量
+UI 重构第 2 波 · 第 2 步 — **接通真 store · 替换 /play 视觉**
 
 ---
 
 ## 这一波做了什么
 
-| 类型 | 文件 | 说明 |
-|---|---|---|
-| 🆕 CSS | `src/styles/design-system.css` | 设计 token + 像素组件 CSS |
-| 🆕 React | `src/ui/Chip.tsx` | 标签 |
-| 🆕 React | `src/ui/PixelPanel.tsx` | 古籍纸面板 |
-| 🆕 React | `src/ui/PixelButton.tsx` | 像素按钮 |
-| 🆕 React | `src/ui/Sprite.tsx` | SVG 像素艺术 sprite |
-| 🆕 React | `src/ui/TileMap.tsx` | tile 地图渲染 |
-| 🆕 React | `src/ui/Banner.tsx` | 横幅 |
-| 🆕 React | `src/ui/Divider.tsx` | 分割线 |
-| 🆕 lib | `src/lib/gameMeta.ts` | GAME 数据（区域 / 工坊 / NPC / 等级）|
-| 🆕 React | `src/pages/Landing.tsx` | 落地页 → `/` 路由 |
-| 🆕 React | `src/pages/ComingSoon.tsx` | `/manual` `/codex` `/maps` 临时占位 |
+### 接通 5 个真 store
+| Hook | 数据来源 |
+|---|---|
+| `useProfile()` | `fetchMyProfile()` + EventBus `profile-updated` |
+| `useCV()` | `getTotalCV()` + EventBus `cv-updated` |
+| `useLevel()` | 基于 CV 算 L0-L4（`gameMeta.LEVELS`）|
+| `useGameTime()` | `computeGameTime()` setInterval 1s |
+| `useOnlineCount()` | EventBus `online-count-updated` |
 
-无 SQL · 无 Phaser 改动 · 无破坏性改动 · localStorage key 不动。
-
----
-
-## ⚠️ 你需要手动改 2 个文件
-
-我没有你最新 `main.tsx` 和 `App.tsx` 的副本——你必须**手动修改**这 2 个文件。
-
-### 文件 1 · `index.html` 加字体
-
-打开 `index.html`，在 `<head>` 里**最前面**加：
-
-```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=Noto+Serif+SC:wght@400;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet" />
-```
-
-### 文件 2 · `src/main.tsx` import css
-
-在 `main.tsx` **最顶部**加一行 import：
-
-```typescript
-import './styles/design-system.css';
-```
-
-完整 main.tsx 大概长这样（你参考自己的实际现状）：
-
-```typescript
-import './styles/design-system.css';
-// ... 其他 import
-
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
-```
-
-### 文件 3 · `src/App.tsx` 加 React Router
-
-这是**关键**——你的 `App.tsx` 需要改成 React Router 包装。
-
-#### 当前你的 App.tsx 大概长这样
-
-```typescript
-function App() {
-  return (
-    <>
-      <PhaserGame />
-      <HUD />
-      <TutorialOverlay />
-      {/* 等等所有顶层组件 */}
-    </>
-  );
-}
-```
-
-#### 改成这样（关键部分）
-
-```typescript
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { LandingPage } from './pages/Landing';
-import { ManualPage, CodexPage, MapsPage } from './pages/ComingSoon';
-// 你已有的 PublicProfilePage import 保持
-
-// 把现有的"游戏主体" 抽成一个 GameApp 组件
-function GameApp() {
-  // 这里放你原来 App() 的所有内容（PhaserGame / HUD / 各种 panel 等）
-  return (
-    <>
-      <PhaserGame />
-      <HUD />
-      <TutorialOverlay />
-      {/* 等等 */}
-    </>
-  );
-}
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/play" element={<GameApp />} />
-        <Route path="/manual" element={<ManualPage />} />
-        <Route path="/codex" element={<CodexPage />} />
-        <Route path="/maps" element={<MapsPage />} />
-        <Route path="/u/:username" element={<PublicProfilePage />} />
-        {/* fallback */}
-        <Route path="*" element={<LandingPage />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
-
-export default App;
-```
-
-⚠️ **重要**：你之前如果在 App.tsx 里有 useEffect / useState 等顶层逻辑（比如 tutorialManager.load() / timeSettings.load() / startSolarTermNotifier()）—— 这些要**移到 GameApp 组件里**，或保留在 App() 但放在 BrowserRouter 之外（如果不依赖路由）。
+### 文件清单
+| 类型 | 文件 |
+|---|---|
+| 🆕 hook | `src/hooks/useProfile.ts` |
+| 🆕 hook | `src/hooks/useCV.ts` |
+| 🆕 hook | `src/hooks/useLevel.ts` |
+| 🆕 hook | `src/hooks/useGameTime.ts` |
+| 🆕 hook | `src/hooks/useOnlineCount.ts` |
+| 🆕 hook | `src/hooks/index.ts` |
+| 🆕 page | `src/pages/NewGameAppHUD.tsx` — 新像素 HUD（用于 /play）|
+| 🔄 page | `src/pages/GameViewPreview.tsx` — 接真数据（替换 Wave 2.1 的 mock 版）|
 
 ---
 
@@ -132,142 +34,286 @@ export default App;
 ```powershell
 cd D:\projects\cua-base
 
-# 确认在 ui-redesign 分支
-git branch
-# 期望看到 * ui-redesign
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-2a.zip"
+Test-Path $zip
 
-# 装 zip
-tar -xf C:\Users\ghani\Downloads\cua-spike-wave1.zip
-Copy-Item -Path .\cua-spike-wave1\* -Destination . -Recurse -Force
-Remove-Item -Recurse cua-spike-wave1
+tar -xf $zip
+Copy-Item -Path .\cua-spike-wave2-2a\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-2a -Recurse -Force
 
-# 验证新文件都在
-Test-Path src\styles\design-system.css
-Test-Path src\ui\PixelPanel.tsx
-Test-Path src\pages\Landing.tsx
-
-# 手动改 index.html / main.tsx / App.tsx（按上面说明）
-notepad index.html
-notepad src\main.tsx
-notepad src\App.tsx
-
-# 跑
-pnpm dev
+# 验证
+Test-Path src\hooks\useProfile.ts
+Test-Path src\hooks\index.ts
+Test-Path src\pages\NewGameAppHUD.tsx
 ```
+
+期望 3 个 `True`。
 
 ---
 
-## 测试
+## 两步测试 · 先 /play-new 再 /play
 
-### A. 落地页（/）
+### Step 1 · 先看 /play-new（真数据隔离测试）
 
-打开 `http://localhost:5173/`
+```powershell
+pnpm dev
+```
+
+打开 `http://localhost:5173/play-new` 
 
 期望看到：
-- ✅ 顶部横栏：左侧 "CUA 基地" + 叶子 sprite，右侧导航（首页 / 手册 / 图鉴 / 地图 / 进入游戏 ▶）
-- ✅ Hero 区："PHASE 3" 横幅 + "把开源贡献，变成一座有人的镇" 大标题 + 像素插画
-- ✅ 三大区域（萌芽镇 / 贡献者中心 / 议政高地）
-- ✅ 9 工坊网格（降噪 / 链接 / 共创）
-- ✅ 核心循环 7 步流程
-- ✅ "已实现系统" + "正在做的事" 4 卡片
-- ✅ CTA 区 + Footer
+- ✅ AvatarPanel 显示**你的真实 GitHub 名字**（不是 "Gaoliang"）
+- ✅ CVBar 显示**你真实 CV**（如果 0 → 显示 "0 / 100"）
+- ✅ TopRightChips 显示**真实游戏节气**（立春/雨水/...）
+- ✅ TopRightChips 显示**真实游戏时间**（HH:MM）
+- ✅ 显示**真实在线人数**（取决于当前在线情况）
+- ✅ Hotbar 第 2 格显示**真实 CV** 当数量
+- ✅ 顶部 chip "Wave 2.2.A · 真数据"
 
-### B. /play
+如果**不对**（比如 AvatarPanel 仍显示 "Gaoliang"）—— 说明你**没登录**，hook 拿不到 profile。先登录再测。
 
-点 "进入游戏 ▶" 按钮 → 跳到 `/play` → 应该看到原来的游戏（含 HUD / Phaser 等）
+### Step 2 · 满意后改 App.tsx 替换 /play
 
-⚠️ Wave 1 不改游戏内 UI——所以 `/play` 看到的是旧版样式。Wave 2 才改。
+打开 `src/App.tsx`，找 `MainGameApp` 那个 function（在 200 行左右）。
 
-### C. /manual /codex /maps
+⚠️ **不要改 `MainGameApp`** —— 我们要做的是**在 MainGameApp 里加新 HUD + 删旧组件**。
 
-点导航 → 跳到 ComingSoon 占位页 → 看到"正在重构中" + "回首页看进度" 按钮
-
-### D. /u/{username}
-
-之前的公开页路由保持不动 —— 还能正常访问。
-
----
-
-## ⚠️ 已知风险
-
-### 1. App.tsx 改坏了游戏跑不起来
-
-⚠️ 改 App.tsx 加 BrowserRouter 时容易出错。如果 `/play` 跳过去看到白屏：
+跑这条 PowerShell 命令做替换：
 
 ```powershell
-# F12 看 Console 报错
-# 90% 是某个 useState / useEffect 的位置不对
+cd D:\projects\cua-base
 
-# 紧急回滚
-git checkout src/App.tsx
+# 备份
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-2a -ErrorAction SilentlyContinue
+
+# 加 import NewGameAppHUD
+$content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
+$oldImport = "import { GameViewPreview } from './pages/GameViewPreview';"
+$newImport = "import { GameViewPreview } from './pages/GameViewPreview';`r`nimport { NewGameAppHUD } from './pages/NewGameAppHUD';"
+$content = $content.Replace($oldImport, $newImport)
+
+[System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
+
+# 验证 import 加上了
+Select-String -Path src\App.tsx -Pattern "NewGameAppHUD" | Format-Table LineNumber, Line
 ```
 
-### 2. 字体加载慢
+期望看到：
+```
+LineNumber Line
+---------- ----
+        83 import { NewGameAppHUD } from './pages/NewGameAppHUD';
+```
 
-首次加载 Google Fonts 可能慢（特别是大陆访问）。可以考虑：
-- 改用国内字体 CDN（fonts.font.im）
-- 或本地化字体（webfontloader）
+### Step 3 · 手动改 MainGameApp 函数体
 
-Wave 1 暂不优化——后续再说。
+⚠️ **这是关键改动** —— 必须**手动**做（PowerShell 难精确替换）。
 
-### 3. 样式冲突
-
-新的 design-system.css 跟你现有的 Tailwind / index.css 可能有冲突——尤其 `body` `html` 的全局 reset。
-
-如果出现奇怪的样式，看 F12 → Elements → 检查 cascade。
-
----
-
-## 验证 Wave 1 通过
-
-跑通后做 4 件事：
+打开 `src/App.tsx`：
 
 ```powershell
-# 1. 编译通过
-pnpm build
+notepad src\App.tsx
+```
 
-# 2. dev 跑通
+按 `Ctrl+F` 搜索 `<HUD />` —— 找到 MainGameApp 函数 return 块。
+
+#### 改前（你当前长这样）
+
+```tsx
+return (
+  <>
+    <PhaserGame />
+
+    <SentryErrorBoundary
+      fallback={({ error, resetError }) => (
+        <CrashFallback error={error} resetError={resetError} />
+      )}
+    >
+      {gameStarted && (
+        <>
+          <HUD />              {/* ← 删 */}
+          <CVDisplay />        {/* ← 删 */}
+          <AuthBadge />
+          <QuestPanel />
+          ...
+          <LevelBadge />       {/* ← 删 */}
+          ...
+          <TimeOverlay />
+          <TimeHUD />          {/* ← 删 */}
+          <TimeSettingsButton />
+          ...
+        </>
+      )}
+      {!gameStarted && <TitleScreen onStart={handleStart} />}
+    </SentryErrorBoundary>
+  </>
+);
+```
+
+#### 改后（4 个删 + 1 个加）
+
+1. 删 `<HUD />`
+2. 删 `<CVDisplay />`
+3. 删 `<LevelBadge />`
+4. 删 `<TimeHUD />`
+5. **加** `<NewGameAppHUD visible={gameStarted} />` —— 放在 `<PhaserGame />` 之后、`<SentryErrorBoundary>` 之前
+
+完整 return 块：
+
+```tsx
+return (
+  <>
+    <PhaserGame />
+    <NewGameAppHUD visible={gameStarted} />     {/* ← 新加 */}
+
+    <SentryErrorBoundary
+      fallback={({ error, resetError }) => (
+        <CrashFallback error={error} resetError={resetError} />
+      )}
+    >
+      {gameStarted && (
+        <>
+          {/* HUD 已删 */}
+          {/* CVDisplay 已删 */}
+          <AuthBadge />
+          <QuestPanel />
+          <TitleList />
+          <DialogueBox />
+          <WorldMap />
+          <QuestLog />
+          <MailBox />
+          <MailBadge />
+          <ReviewBadge />
+          <ReviewPanel />
+          <RoadmapPanel />
+          <AppealDeskPanel />
+          <CreateProposalPanel />
+          <ProposalListPanel />
+          <HomeWallPanel />
+          <MeritBoardPanel />
+          {/* LevelBadge 已删 */}
+          <LevelUpAnimation />
+          <FaceCustomizer />
+          <ProfilePanel />
+          <ProfilePanelKeyListener />
+          <ProfileLink />
+          <OnlineRoster />
+          <ChatPanel />
+          <ChatPanelKeyListener />
+          <PlayerInteractPrompt />
+          <PlayerInteractMenu />
+          <PlayerInteractKeyListener />
+          <QuestHistoryPanel />
+          <QuestHistoryKeyListener />
+          <NotificationToast />
+          <NotificationPanel />
+          <NotificationKeyListener />
+          <NotificationBadge />
+          <FriendsPanel />
+          <FriendsKeyListener />
+          <EmotePanel />
+          <EmoteOverlay />
+          <DashboardPanel />
+          <DashboardKeyListener />
+          <AnnouncementButton />
+          <HelpButton />
+          <TutorialOverlay />
+          <TimeOverlay />
+          {/* TimeHUD 已删 */}
+          <TimeSettingsButton />
+          <NpcGreetingToast />
+          <SolarTermBanner />
+          <ReviewProcessor />
+          <ReviewSeeder />
+          <AppealProcessor />
+        </>
+      )}
+      {!gameStarted && <TitleScreen onStart={handleStart} />}
+    </SentryErrorBoundary>
+  </>
+);
+```
+
+保存 → Vite HMR 自动重载。
+
+### Step 4 · 浏览器测 /play
+
+```
+http://localhost:5173/play
+```
+
+期望：
+- ✅ 进入 TitleScreen 登录界面（如果未登录）
+- ✅ 登录后看到游戏 + **新像素 HUD**（左上头像 / 右上节气 / 右下 hotbar 等）
+- ✅ Phaser canvas 正常运行
+- ✅ 角色 WASD 能移动
+- ✅ 按 E 跟 NPC 对话仍能用
+- ✅ 点新像素左下 5 图标 → 触发 EventBus `toggle-panel`（暂时无响应，Wave 2.3 接）
+- ✅ 教程系统、节气 banner、通知 toast 都正常工作
+
+⚠️ **如果出问题** —— 立刻回滚：
+```powershell
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-2a src\App.tsx
 pnpm dev
-
-# 3. 浏览器看 4 个 URL 都能开
-# http://localhost:5173/
-# http://localhost:5173/play
-# http://localhost:5173/manual
-# http://localhost:5173/u/Leoatsr  (如果你之前能开)
-
-# 4. 没看到红色 console error
 ```
 
 ---
 
-## Push 到分支
+## 已知限制（Wave 2.2.A · 故意）
+
+- ⚠️ **5 图标按钮点击无响应** — 触发了 `toggle-panel` EventBus 但旧 panel 还没监听 · Wave 2.3 接通
+- ⚠️ **小地图玩家位置静态** — 不会随移动更新（Wave 2.B 才接 Phaser scene 数据）
+- ⚠️ **当前任务卡片是占位** — Phase 2.5 接入 GitHub Issues 后才有真数据
+- ⚠️ **旧 ChatPanel/MailBox 仍保留视觉风格**（黑底）— Wave 2.3+ 重写为像素风
+- ⚠️ **登录前 TitleScreen 没改**（Wave 2.B 才改）
+
+---
+
+## 测试清单
+
+```
+☐ /play-new 真 profile / CV / 时间显示正确
+☐ /play 登录后 NewGameAppHUD 出现
+☐ /play TitleScreen 登录前不出现 NewGameAppHUD
+☐ Phaser 角色 WASD 仍能移动
+☐ 按 E 跟 NPC 对话仍能用
+☐ 教程 24 step 仍能跑
+☐ 节气切换 banner 仍能出
+☐ 通知 toast 仍能出
+☐ TimeOverlay 昼夜 tint 仍生效
+☐ ProfilePanel (P 键)、ChatPanel (T/Enter)、QuestLog (J)、MailBox (K)、FriendsPanel (F) 仍能开
+☐ 议政高地 5 panel 仍能进
+☐ /u/Leoatsr 公开页仍能开
+```
+
+---
+
+## Push
+
+跑通后：
 
 ```powershell
 git add .
-git status
+git commit -m "Wave 2.2.A: Connect real stores + replace /play HUD
 
-# 看了 staged 没问题后
-git commit -m "Wave 1: Design system + Landing + React Router
-
-- New design system CSS (pixel ancient-book aesthetic)
-- 8 shared UI components (PixelPanel/Button/Sprite/TileMap/Banner/Chip/Divider)
-- Landing page at / route
-- ComingSoon placeholders at /manual /codex /maps (Wave 2-4 will replace)
-- /play route wraps existing game"
+- 5 hooks (useProfile/useCV/useLevel/useGameTime/useOnlineCount)
+- NewGameAppHUD with real data (avatar/CV/time/solar term/online)
+- Removed old HUD/CVDisplay/LevelBadge/TimeHUD from App.tsx
+- 5 icon buttons trigger 'toggle-panel' EventBus (handlers in Wave 2.3+)
+- Old ChatPanel/MailBox/QuestLog/etc preserved (visual rewrite in Wave 2.3+)
+- TutorialOverlay/SolarTermBanner/NotificationToast etc all preserved"
 
 git push
 ```
 
-Push 后 Vercel 会自动给 ui-redesign 分支生成 preview URL：
-
-```
-cua-base-git-ui-redesign-leoatsr.vercel.app
-```
-
-打开看效果。
-
 ---
 
-## 下一波
+## 下一波 · Wave 2.3
 
-跑通 Wave 1 后，回我"完成"——我立刻开始 Wave 2（游戏内 HUD 全套）。
+满意后回我"完成"或"接受"——我立刻开 **Wave 2.3 · ChatPanel 像素风重写**（3-4h）。
+
+或回滚：
+
+```powershell
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-2a src\App.tsx
+```
