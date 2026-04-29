@@ -1,3 +1,4 @@
+import './styles/design-system.css';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { initSentry } from './lib/sentry';

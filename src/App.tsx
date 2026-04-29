@@ -77,6 +77,8 @@ import { ensureProfile } from './lib/profileStore';
 import { EventBus } from './game/EventBus';
 import { SentryErrorBoundary } from './lib/sentry';
 import { startUserTracker } from './lib/userTracker';
+import { LandingPage } from './pages/Landing';
+import { ManualPage, CodexPage, MapsPage } from './pages/ComingSoon';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -308,7 +310,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainGameApp />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/play" element={<MainGameApp />} />
+        <Route path="/manual" element={<ManualPage />} />
+        <Route path="/codex" element={<CodexPage />} />
+        <Route path="/maps" element={<MapsPage />} />
         <Route
           path="/u/:username"
           element={
@@ -317,6 +323,7 @@ export default function App() {
             </Suspense>
           }
         />
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>
   );
