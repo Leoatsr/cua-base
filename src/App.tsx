@@ -2,28 +2,17 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PhaserGame } from './game/PhaserGame';
 import { DialogueBox } from './components/DialogueBox';
-import { HUD } from './components/HUD';
 import { TitleScreen } from './components/TitleScreen';
 import { QuestPanel } from './components/QuestPanel';
 import { TitleList } from './components/TitleList';
 import { WorldMap } from './components/WorldMap';
-import { QuestLog } from './components/QuestLog';
-import { MailBox } from './components/MailBox';
 import { MailBadge } from './components/MailBadge';
-import { CVDisplay } from './components/CVDisplay';
 import { ReviewProcessor } from './components/ReviewProcessor';
 import { ReviewPanel } from './components/ReviewPanel';
 import { ReviewBadge } from './components/ReviewBadge';
 import { ReviewSeeder } from './components/ReviewSeeder';
 import { AppealProcessor } from './components/AppealProcessor';
 import { AuthBadge } from './components/AuthBadge';
-import { RoadmapPanel } from './components/RoadmapPanel';
-import { AppealDeskPanel } from './components/AppealDeskPanel';
-import { CreateProposalPanel } from './components/CreateProposalPanel';
-import { ProposalListPanel } from './components/ProposalListPanel';
-import { HomeWallPanel } from './components/HomeWallPanel';
-import { MeritBoardPanel } from './components/MeritBoardPanel';
-import { LevelBadge } from './components/LevelBadge';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { FaceCustomizer } from './components/FaceCustomizer';
 import { ProfilePanel } from './components/ProfilePanel';
@@ -36,7 +25,6 @@ const PublicProfilePage = lazy(() =>
   }))
 );
 import { OnlineRoster } from './components/OnlineRoster';
-import { ChatPanel } from './components/ChatPanel';
 import { ChatPanelKeyListener } from './components/ChatPanelKeyListener';
 import { PlayerInteractPrompt } from './components/PlayerInteractPrompt';
 import { PlayerInteractMenu } from './components/PlayerInteractMenu';
@@ -47,18 +35,15 @@ import { NotificationToast } from './components/NotificationToast';
 import { NotificationPanel } from './components/NotificationPanel';
 import { NotificationKeyListener } from './components/NotificationKeyListener';
 import { NotificationBadge } from './components/NotificationBadge';
-import { FriendsPanel } from './components/FriendsPanel';
 import { FriendsKeyListener } from './components/FriendsKeyListener';
 import { EmotePanel } from './components/EmotePanel';
 import { EmoteOverlay } from './components/EmoteOverlay';
 import { DashboardPanel } from './components/DashboardPanel';
 import { DashboardKeyListener } from './components/DashboardKeyListener';
-import { AnnouncementButton } from './components/AnnouncementButton';
 import { HelpButton } from './components/HelpButton';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { tutorialManager } from './lib/tutorialStore';
 import { TimeOverlay } from './components/TimeOverlay';
-import { TimeHUD } from './components/TimeHUD';
 import { TimeSettingsButton } from './components/TimeSettingsButton';
 import { timeSettings } from './lib/timeStore';
 import { NpcGreetingToast } from './components/NpcGreetingToast';
@@ -89,7 +74,9 @@ import { NewQuestLog } from './components/NewQuestLog';
 import { NewCreateProposalPanel } from './components/NewCreateProposalPanel';
 import { NewProposalListPanel } from './components/NewProposalListPanel';
 import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';
-import { PanelToggleBridge } from './components/PanelToggleBridge';
+import { NewHomeWallPanel } from './components/NewHomeWallPanel';
+import { NewMeritBoardPanel } from './components/NewMeritBoardPanel';
+import { NewRoadmapPanel } from './components/NewRoadmapPanel';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -225,12 +212,12 @@ function MainGameApp() {
             <MailBadge />
             <ReviewBadge />
             <ReviewPanel />
-            <RoadmapPanel />
+            <NewRoadmapPanel />
             <NewAppealDeskPanel />
             <NewCreateProposalPanel />
             <NewProposalListPanel />
-            <HomeWallPanel />
-            <MeritBoardPanel />
+            <NewHomeWallPanel />
+            <NewMeritBoardPanel />
             <LevelUpAnimation />
             <FaceCustomizer />
             <ProfilePanel />
@@ -255,7 +242,6 @@ function MainGameApp() {
             <EmoteOverlay />
             <DashboardPanel />
             <DashboardKeyListener />
-            <AnnouncementButton />
             <HelpButton />
             <TutorialOverlay />
             <TimeOverlay />

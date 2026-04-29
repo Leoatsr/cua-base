@@ -1,6 +1,6 @@
-# Wave 2.5.B · 议政 3 panel 像素风重写
+# Wave 2.5.C · 远见塔 / 功德堂 / 自家小屋 像素风重写
 
-UI 重构第 2 波 · 第 8 步 — **议政厅 + 申诉案桌**
+UI 重构第 2 波 · 第 9 步 — **3 大展示型 panel 像素化**
 
 ---
 
@@ -10,28 +10,27 @@ UI 重构第 2 波 · 第 8 步 — **议政厅 + 申诉案桌**
 
 | Panel | 触发 | 功能 |
 |---|---|---|
-| `NewCreateProposalPanel` | EventBus `open-create-proposal` | 新建提案（标题 + 描述 + 5 类别 + 4 时长选项 · L2 守门）|
-| `NewProposalListPanel` | EventBus `open-proposal-list` | 提案列表（公示中/已决议 2 tab + 类别筛选）+ 投票（赞/反/弃 + 备注 · L1 守门）|
-| `NewAppealDeskPanel` | EventBus `open-appeal-desk` | 任务申诉案桌（明镜阁）· 列出可申诉任务 + 发起申诉 |
+| `NewHomeWallPanel` | EventBus `open-home-wall` (HomeScene [E]) | 自家小屋纪念墙 · 个人成就时间轴（CV / 任务 / 提案 + GitHub avatar + level）|
+| `NewMeritBoardPanel` | EventBus `open-merit-board` (功德堂中央碑石 [E]) | 全站 CV 排行榜（Top 20 · 自己高亮 · 前 3 名金/银/铜大行排版）|
+| `NewRoadmapPanel` | EventBus `open-roadmap` (远见塔 [E]) | 5 阶段路线图（done/progress/todo + 进度条 + highlights + 阶段间箭头）|
 
-### 复用现有 store API
+### 复用现有 store
 
-✅ 100% 兼容 `proposalStore.ts`：
-- createProposal / castVote / withdrawVote / getMyVote
-- listOpenProposals / listClosedProposals / finalizeOverdueProposals
-- subscribeProposalChanges (realtime)
-
-✅ 100% 兼容 `questStore.ts` + `appealReviewers.ts`：
-- 申诉数据完全跟旧 AppealDeskPanel 一致
-- 用 startAppealState + scheduleAppealVotes
-- 沿用 ReviewProcessor / AppealProcessor 的事件链
+✅ 100% 兼容：
+- `cv.ts` (getTotalCV / getCVEntries)
+- `proposalStore.ts` (proposals 表查询)
+- `levelStore.ts` (fetchUserLevel)
+- `profileStore.ts` (fetchMyProfile)
+- `get_cv_leaderboard` RPC
 
 ### 文件清单
 ```
-🆕 src/hooks/useProposals.ts
-🆕 src/components/NewCreateProposalPanel.tsx
-🆕 src/components/NewProposalListPanel.tsx
-🆕 src/components/NewAppealDeskPanel.tsx
+🆕 src/lib/roadmapData.ts             (5 stages 数组 · 抽自旧 RoadmapPanel)
+🆕 src/hooks/useLeaderboard.ts        (含 estimateLevel)
+🆕 src/hooks/useHomeWallData.ts
+🆕 src/components/NewHomeWallPanel.tsx
+🆕 src/components/NewMeritBoardPanel.tsx
+🆕 src/components/NewRoadmapPanel.tsx
 🔄 src/hooks/index.ts (加 export)
 ```
 
@@ -42,21 +41,23 @@ UI 重构第 2 波 · 第 8 步 — **议政厅 + 申诉案桌**
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5b.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5c.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-5b\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-5b -Recurse -Force
+Copy-Item -Path .\cua-spike-wave2-5c\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-5c -Recurse -Force
 
 # 验证
-Test-Path src\hooks\useProposals.ts
-Test-Path src\components\NewCreateProposalPanel.tsx
-Test-Path src\components\NewProposalListPanel.tsx
-Test-Path src\components\NewAppealDeskPanel.tsx
+Test-Path src\lib\roadmapData.ts
+Test-Path src\hooks\useLeaderboard.ts
+Test-Path src\hooks\useHomeWallData.ts
+Test-Path src\components\NewHomeWallPanel.tsx
+Test-Path src\components\NewMeritBoardPanel.tsx
+Test-Path src\components\NewRoadmapPanel.tsx
 ```
 
-期望 4 个 `True`。
+期望 6 个 `True`。
 
 ---
 
@@ -65,35 +66,35 @@ Test-Path src\components\NewAppealDeskPanel.tsx
 ```powershell
 cd D:\projects\cua-base
 
-Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5b -ErrorAction SilentlyContinue
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5c -ErrorAction SilentlyContinue
 
 $content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
 
 # 加 imports
-$oldImport = "import { NewQuestLog } from './components/NewQuestLog';"
-$newImport = "import { NewQuestLog } from './components/NewQuestLog';`r`nimport { NewCreateProposalPanel } from './components/NewCreateProposalPanel';`r`nimport { NewProposalListPanel } from './components/NewProposalListPanel';`r`nimport { NewAppealDeskPanel } from './components/NewAppealDeskPanel';"
+$oldImport = "import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';"
+$newImport = "import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';`r`nimport { NewHomeWallPanel } from './components/NewHomeWallPanel';`r`nimport { NewMeritBoardPanel } from './components/NewMeritBoardPanel';`r`nimport { NewRoadmapPanel } from './components/NewRoadmapPanel';"
 $content = $content.Replace($oldImport, $newImport)
 
 # 替换 3 个旧 panel
-$content = $content -replace '<CreateProposalPanel />', '<NewCreateProposalPanel />'
-$content = $content -replace '<ProposalListPanel />', '<NewProposalListPanel />'
-$content = $content -replace '<AppealDeskPanel />', '<NewAppealDeskPanel />'
+$content = $content -replace '<HomeWallPanel />', '<NewHomeWallPanel />'
+$content = $content -replace '<MeritBoardPanel />', '<NewMeritBoardPanel />'
+$content = $content -replace '<RoadmapPanel />', '<NewRoadmapPanel />'
 
 [System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
 
 # 验证
 Write-Host "=== imports（应 3 行）==="
-Select-String -Path src\App.tsx -Pattern "from './components/NewCreateProposalPanel'|from './components/NewProposalListPanel'|from './components/NewAppealDeskPanel'" | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern "from './components/NewHomeWallPanel'|from './components/NewMeritBoardPanel'|from './components/NewRoadmapPanel'" | Format-Table LineNumber, Line
 
-Write-Host "=== 应只有 New 版 · 0 个旧版 ==="
-Select-String -Path src\App.tsx -Pattern '<CreateProposalPanel />|<NewCreateProposalPanel />' | Format-Table LineNumber, Line
-Select-String -Path src\App.tsx -Pattern '<ProposalListPanel />|<NewProposalListPanel />' | Format-Table LineNumber, Line
-Select-String -Path src\App.tsx -Pattern '<AppealDeskPanel />|<NewAppealDeskPanel />' | Format-Table LineNumber, Line
+Write-Host "=== 应只有 New 版（每个 1 行）==="
+Select-String -Path src\App.tsx -Pattern '<HomeWallPanel />|<NewHomeWallPanel />' | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern '<MeritBoardPanel />|<NewMeritBoardPanel />' | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern '<RoadmapPanel />|<NewRoadmapPanel />' | Format-Table LineNumber, Line
 ```
 
 ---
 
-## 跑
+## 跑 + 测试
 
 ```powershell
 pnpm dev
@@ -101,100 +102,89 @@ pnpm dev
 
 打开 `http://localhost:5173/play` 登录进游戏。
 
-### 测试入口
-
-议政厅在游戏里通过 [E] 键交互（议政高地 GovHill 场景的讲坛）：
-- **新提案** · 议政高地讲坛 [E] → CreateProposalPanel · 需 L2
-- **看提案** · 议政高地公告板 [E] → ProposalListPanel
-- **申诉** · 明镜阁 MirrorPavilion 案桌 [E] → AppealDeskPanel
-
-或用 F12 Console 直接触发：
-```javascript
-// 测试新建提案
-window.eventBus?.emit('open-create-proposal');
-// 或 (旧式)
-EventBus.emit('open-create-proposal')
-```
-
-测试 3 个 panel：
+### F12 Console 直接触发（最快）
 
 ```javascript
-EventBus.emit('open-create-proposal')   // 新建提案
-EventBus.emit('open-proposal-list')     // 提案列表
-EventBus.emit('open-appeal-desk')       // 申诉案桌
+// 像 Wave 2.5.B 一样
+import('/src/game/EventBus.ts').then(m => {
+  window.__EventBus = m.EventBus;
+  // 测试 3 个：
+  m.EventBus.emit('open-home-wall')      // 自家小屋
+  // m.EventBus.emit('open-merit-board')  // 功德堂
+  // m.EventBus.emit('open-roadmap')      // 远见塔
+});
 ```
+
+或在游戏里走到对应场景按 [E]：
+- 自家小屋（HomeScene 的墙）
+- 功德堂（GongdeTangScene 中央碑石）
+- 远见塔（VisionTowerScene）
 
 ---
 
 ## 测试清单
 
-### NewCreateProposalPanel（L2 守门）
+### NewHomeWallPanel · 自家小屋
 ```
-☐ 1. F12 → EventBus.emit('open-create-proposal') → 像素风面板出现
-☐ 2. 看到标题输入 / 5 类别按钮 / 描述区 / 4 时长按钮
-☐ 3. 标题字符计数 / 描述字符计数
-☐ 4. 类别选择高亮金色
-☐ 5. 时长 "3 天" 默认选中
-☐ 6. 短描述 → 验证错误提示
-☐ 7. 点 "发起提案" · 如果 L<2 → 显示 "等级不足"
-☐ 8. L≥2 → 显示成功 + 1.5s 后关闭
-☐ 9. ESC 关闭（提交中不能关）
-```
-
-### NewProposalListPanel
-```
-☐ 10. F12 → EventBus.emit('open-proposal-list') → 像素风面板（600×620）
-☐ 11. 看到 2 tab：公示中 / 已决议
-☐ 12. 类别筛选条（6 个按钮：全部 / 5 类别）
-☐ 13. 左 sidebar 列表（220px）
-☐ 14. 点提案项 → 右侧详情显示
-☐ 15. 详情：类别 chip / 标题 / 作者 / 倒计时
-☐ 16. 详情：描述（whitespace 保留）+ 投票统计条
-☐ 17. 投票按钮：✓赞成 / ✗反对 / ⊘弃权 / 撤票
-☐ 18. 加备注（可选）
-☐ 19. 投票 · 如果 L<1 → "等级不足"
-☐ 20. 投票后 → 自己的票显示在详情区
-☐ 21. 投票统计实时更新（subscribeProposalChanges 触发）
-☐ 22. 已决议 tab → 没有投票按钮 + 显示 outcome chip
-☐ 23. 顶部 "+ 新提案" → 触发 NewCreateProposalPanel
-☐ 24. 自动 finalizeOverdueProposals · 如有关闭显示 "已结案 N"
+☐ 1. F12 → EventBus.emit('open-home-wall') → 像素风面板（600×620）
+☐ 2. 看到个人卡片：GitHub avatar + 名字 + L? + 总 CV
+☐ 3. Stat 行：任务数 · 提案数 · 通过数
+☐ 4. "完成任务" section: 时间轴卡（金色左边线 · 任务名 · 工坊 · +CP）
+☐ 5. 任务卡按时间倒序 · 显示最近 10 条
+☐ 6. "创建的提案" section: 类别 chip + outcome chip + 标题 + 投票数
+☐ 7. 未登录 → "请先用 GitHub 登录"
+☐ 8. ESC 关闭
 ```
 
-### NewAppealDeskPanel
+### NewMeritBoardPanel · 功德堂
 ```
-☐ 25. F12 → EventBus.emit('open-appeal-desk') → 像素风面板
-☐ 26. 看到 "明镜阁 · 申诉案桌" 标题 + 副标题
-☐ 27. 待申诉列表（status='submitted' + !appealed + 有 finalCoeff）
-☐ 28. 已申诉历史（按结果显示：上调/维持/驳回）
-☐ 29. 点 "发起申诉" → 确认页（自评 vs 评审 + 入账 CV + 申诉规则）
-☐ 30. 点 "确认申诉" → toast 提示 + 关闭面板 + 调度 3 复审员
-☐ 31. 点 "再想想" → 回列表
-☐ 32. ESC 在确认页 · 先回列表 · 再按一次关面板
+☐ 9. F12 → EventBus.emit('open-merit-board') → 像素风面板（540×620）
+☐ 10. 看到 "功德堂 · 贡献者排行" 标题 + "碑上无虚名 · 上石必有功"
+☐ 11. 前 3 名大行排版（金/银/铜边框 + 🥇🥈🥉）
+☐ 12. 第 4 名后 · 普通行
+☐ 13. 自己的行高亮（金色边框 + "我" chip）
+☐ 14. 不在 Top 20 → 底部显示 "你不在前 20"
+☐ 15. ↻ 按钮 · 手动刷新
+☐ 16. 加载中 → "正在录入功德......"
+☐ 17. 加载失败 → "读取失败 · 请稍后再试"
+```
+
+### NewRoadmapPanel · 远见塔
+```
+☐ 18. F12 → EventBus.emit('open-roadmap') → 像素风面板（600×620）
+☐ 19. Header："远见塔 · 五阶路线图"
+☐ 20. 总览 chip：已完成 1 / 进行中 2 / 待开始 2
+☐ 21. 5 阶段卡：萌芽镇 / 共创之都 / 议政高地 / 真任务源 / 多人在场
+☐ 22. 每阶段：phase label + 名字 + 状态 chip + 描述 + 进度条 + highlights
+☐ 23. done 状态：绿色边框 + 100% 进度
+☐ 24. progress 状态：金色边框 + 进度条（百分比）
+☐ 25. todo 状态：灰色边框 + opacity 0.85
+☐ 26. 阶段间箭头 ↓
+☐ 27. ESC 关闭
 ```
 
 ### 兼容性检查
 ```
-☐ 旧 CreateProposalPanel / ProposalListPanel / AppealDeskPanel 文件保留
+☐ 旧 HomeWallPanel / MeritBoardPanel / RoadmapPanel 文件保留
 ☐ Phaser 内 [E] 交互仍触发对应 panel（开新版）
-☐ 议政高地 / 明镜阁 场景的 NPC 互动正常
-☐ ReviewProcessor / AppealProcessor headless 组件仍正常
-☐ Mail（K）/ Chat（T）/ Friends（F）/ QuestLog（J）仍能开
+☐ 自家小屋墙 / 功德堂碑石 / 远见塔 NPC 互动正常
+☐ Mail / Chat / Friends / QuestLog / Announcement / 议政 全部仍能开
 ```
 
 ---
 
 ## ⚠️ 已知限制
 
-- ⚠️ **没有 [E] 键提示像素化** — Phaser 内的 [E] 交互悬浮提示是 Phaser 渲染，不是 React
-- ⚠️ **议政厅 NPC 对话** 仍是旧版 DialogueBox · Wave 2.6 后续看
-- ⚠️ **L0 用户**看不到议政内容（所有 panel 都需要至少 L1）
+- ⚠️ **MeritBoardPanel 等级估算**：不含 proposal_count（RPC 不返回）· L3+ 无法准确显示 · 用 estimateLevel 函数兜底
+- ⚠️ **HomeWallPanel CV entries 限制 10 条**：避免长时间用户列表过长 · 可后续加 "查看全部"
+- ⚠️ **RoadmapPanel 数据硬编码**：5 stages 在 `lib/roadmapData.ts` · 改阶段需要改代码
 
 ---
 
 ## ⚠️ 紧急回滚
 
 ```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5b src\App.tsx
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5c src\App.tsx
 ```
 
 ---
@@ -203,13 +193,21 @@ Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5b src\App.tsx
 
 ```powershell
 git add .
-git commit -m "Wave 2.5.B: Council Hall 3 panels pixel rewrite
+git commit -m "Wave 2.5.C: HomeWall/MeritBoard/Roadmap pixel rewrite
 
-- NewCreateProposalPanel (540x600): title + 5 categories + 4 durations + L2 gate
-- NewProposalListPanel (600x620): list + filter + vote bar + comment
-- NewAppealDeskPanel (540x600): appealable + history + confirm form
-- useProposals hook: realtime subscription + lazy finalize on open
-- 100% compatible with proposalStore / questStore APIs
+- NewHomeWallPanel (600x620): personal achievements timeline
+  - GitHub avatar + name + level + total CV
+  - CV entries (gold left border)
+  - Created proposals (with outcome chips)
+- NewMeritBoardPanel (540x620): CV leaderboard
+  - Top 3 gold/silver/bronze big rows
+  - Rank 4+ compact rows
+  - Self-highlight + 'not in top 20' hint
+- NewRoadmapPanel (600x620): 5-stage roadmap
+  - done/progress/todo with progress bar + highlights
+  - Stages connected with ↓ arrows
+- 3 new hooks: useHomeWallData / useLeaderboard / (estimateLevel)
+- Extracted STAGES to src/lib/roadmapData.ts
 - Old 3 panels preserved (Wave 2.6 cleanup)"
 
 git push
@@ -217,11 +215,11 @@ git push
 
 ---
 
-## 下一波
+## 下一波 · 强烈推荐 Wave 2.6 收尾
 
 回我**一个**：
 
-- **"完成 · 进 Wave 2.5.C"** = 远见塔/功德堂/路线图（3-4h）
-- **"完成 · 进 Wave 2.6 收尾"** = 删旧组件 + 整体测试（2-3h · 推荐）
+- **"完成 · 进 Wave 2.6 收尾"** ✅ 推荐 = 删 30+ 旧组件 + App.tsx 清理 + 整体测试
+- **"完成 · 进 Wave 2.5.A.3"** = QuestLog 审核流像素化（3-4h · 锦上添花）
 - **"完成 · 暂停找用户测"**
 - **"调整某处"** + 写出

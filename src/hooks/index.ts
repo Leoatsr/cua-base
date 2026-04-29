@@ -17,3 +17,6 @@ export { useOpenViaEventBus } from './useOpenViaEventBus';
 export { useAnnouncements } from './useAnnouncements';
 export { useQuestStates } from './useQuestStates';
 export { useProposals } from './useProposals';
+export { useLeaderboard, estimateLevel } from './useLeaderboard';
+export type { LeaderboardRow } from './useLeaderboard';
+export { useHomeWallData } from './useHomeWallData';
