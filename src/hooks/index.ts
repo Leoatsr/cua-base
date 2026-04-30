@@ -20,3 +20,4 @@ export { useProposals } from './useProposals';
 export { useLeaderboard, estimateLevel } from './useLeaderboard';
 export type { LeaderboardRow } from './useLeaderboard';
 export { useHomeWallData } from './useHomeWallData';
+export { useCountdownTick } from './useCountdownTick';

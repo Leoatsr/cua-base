@@ -1,191 +1,190 @@
-# CUA 基地 · CUA Base
+# Wave 2.5.A.3 · QuestLog 审核流像素化（80% · Q2/Q3/Q4）
 
-> _A pixel MMO for the WebAgentLab open-source community._
->
-> 像素风浏览器游戏化协作平台 · 为 WebAgentLab 开源社区打造
-
-[![ui-redesign](https://img.shields.io/badge/branch-ui--redesign-orange)](https://github.com/Leoatsr/cua-base/tree/ui-redesign)
-[![tech](https://img.shields.io/badge/tech-Vite_8_+_React_19_+_Phaser_3.90-blue)]()
-[![status](https://img.shields.io/badge/Wave_2-complete-green)]()
+UI 重构第 2 波 · QuestLog 完整化 — **撤回倒计时 + 申诉流 + CV 金光动画**
 
 ---
 
-## 这是什么
+## 这一波做了什么
 
-**CUA 基地（CUA Base）**是一个像素风的浏览器协作平台 —— 用游戏化的方式让 Web Agent 开发者贡献、互动、参与治理。
+### 3 个子功能
 
-不是单机游戏。不是元宇宙。这是一个**协作工坊** —— 每完成一份真实贡献就有 CV 入账、有审核员复审、有同行投票。
+| Q | 功能 | 状态 |
+|---|---|---|
+| **Q2** | 撤回倒计时 1s tick 实时刷新 | ✅ 完成 |
+| **Q3** | 申诉流入口（已完成 tab "发起申诉"按钮 + 确认 modal） | ✅ 完成 |
+| **Q4** | CV 完整版金光动画（数字滚 + 金光环 + 闪光 + 浮动 +N） | ✅ 完成 |
+| **Q1** | 审核员投票动画完整版（chip 滑入 + 完成 toast + 烟花） | ⏳ Wave 2.5.A.4 |
 
-### 核心理念
-
-- **降噪** — 不打扰、不推送、不通知轰炸
-- **链接** — 用工坊系统让贡献者自然连接
-- **共创** — 每一份 commit / 论文 / Issue · 都看得到
-
----
-
-## 项目状态
-
-🎉 **Wave 2 UI 重写完成（2026-04）** —— 16 个面板全部从黑底深色 UI 迁移到**像素古籍风**。
-
-- ✅ NewGameAppHUD（10 个 HUD 组件）
-- ✅ 7 大功能面板（Chat / Mail / Friends / Quest / 公告板 / 议政 / 远见塔 等）
-- ✅ 共享 UI 库（PixelPanel / PixelButton / Chip / Sprite / TileMap / Banner / Divider）
-- ✅ 设计系统（design-system.css · CSS vars · 像素古籍风）
-
-详见 [docs/wave-2-summary.md](./docs/wave-2-summary.md)
-
----
-
-## 技术栈
-
+### 文件清单
 ```
-Frontend:  Vite 8 + React 19 + TypeScript (strict)
-Game:      Phaser 3.90
-Realtime:  Supabase (Auth + Realtime + Postgres + RLS)
-Routing:   react-router-dom 7
-Errors:    Sentry
-Deploy:    Vercel
-Package:   pnpm
-```
-
-**编译验证命令**：
-
-```bash
-npx tsc --noEmit --verbatimModuleSyntax --noUnusedLocals --noUnusedParameters
+🆕 src/hooks/useCountdownTick.ts        (Q2 1s tick)
+🆕 src/components/ReviewerVoteCard.tsx  (审核员意见显示 · 简版 chip)
+🆕 src/components/AppealConfirmModal.tsx (Q3 申诉确认弹窗)
+🆕 src/components/CVRewardBurst.tsx     (Q4 完整版动画)
+🔄 src/components/NewQuestLog.tsx       (整合 Q2/Q3/Q4)
+🔄 src/hooks/index.ts                   (加 useCountdownTick export)
 ```
 
 ---
 
-## 跑起来
-
-### 前置依赖
-
-- Node.js ≥ 20
-- pnpm ≥ 10
-- Supabase 账号（自己建一个免费 project）
-
-### 步骤
+## 安装
 
 ```powershell
-# 1. clone
-git clone https://github.com/Leoatsr/cua-base.git
-cd cua-base
-git checkout ui-redesign
+cd D:\projects\cua-base
 
-# 2. 装依赖
-pnpm install
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a3.zip"
+Test-Path $zip
 
-# 3. 配置环境变量（写 .env.local）
-# VITE_SUPABASE_URL=https://xxx.supabase.co
-# VITE_SUPABASE_ANON_KEY=eyJxxx
+tar -xf $zip
+Copy-Item -Path .\cua-spike-wave2-5a3\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-5a3 -Recurse -Force
 
-# 4. 跑
+# 验证
+Test-Path src\hooks\useCountdownTick.ts
+Test-Path src\components\ReviewerVoteCard.tsx
+Test-Path src\components\AppealConfirmModal.tsx
+Test-Path src\components\CVRewardBurst.tsx
+```
+
+期望 4 个 `True`。
+
+---
+
+## 不需要改 App.tsx
+
+NewQuestLog 已经在 App.tsx 引用（Wave 2.5.A.2 装的）—— 这次只是升级文件内容，App.tsx 不变。
+
+---
+
+## 跑
+
+```powershell
 pnpm dev
 ```
 
-打开 `http://localhost:5173/`。
+打开 `http://localhost:5173/play` 登录进游戏。按 J 键 / 点 NewGameAppHUD 📋
 
 ---
 
-## 主要功能
+## 测试清单
 
-### 🌱 萌芽镇（Phase 1 · 已完成）
-- 9 大角色变量
-- 阿降 NPC + 引导教程
-- 典籍阁 / 铁匠铺 / 阿降小屋
-- 萌芽印记成长系统
-
-### 🛠 共创之都（Phase 2 · 进行中）
-- **百晓居首工坊** · 5 真任务：
-  - 单篇论文入库（10–15 CV）
-  - 作者/机构卡片完善（5 CV）
-  - 单周数据质量抽查（50 CV）
-  - 自动化抓取脚本（150–300 CV）
-  - 季度技术版图研判（200–300 CV）
-- 任务提交 / 撤回（3 分钟窗口） / 3 审核员投票 / 申诉闭环
-- CV 入账 + 邮件系统
-
-### 🏛 议政高地（Phase 4 · 进行中）
-- **议政厅** · 提案投票（5 类别 + 4 时长 · L2 mentor 守门 · L1 投票）
-- **明镜阁** · 申诉案桌（3 复审员独立评议 · 只上调不下调）
-- **远见塔** · 5 阶段路线图（you are here）
-
-### 🏆 功德堂（Phase 4 · 进行中）
-- CV 排行榜（Top 20 · 自己高亮）
-
-### 🏠 自家小屋（Phase 1 · 已完成）
-- 个人成就时间轴（CV / 任务 / 提案）
-
----
-
-## 键盘快捷键
-
-| 键 | 功能 |
-|---|---|
-| `T` | 打开聊天 |
-| `K` | 打开邮件 |
-| `F` | 打开好友 |
-| `J` | 打开任务日志 |
-| `P` | 打开个人资料 |
-| `E` | 与 NPC / 设施交互（在游戏内） |
-| `Esc` | 关闭当前面板 |
-
-底部 5 图标按钮（NewGameAppHUD）：📜 公告 · 📋 任务 · ✉ 邮件 · 💬 聊天 · 👥 好友
-
----
-
-## 项目结构
-
+### Q2 · 撤回倒计时（看实时跳秒）
 ```
-cua-base/
-├── src/
-│   ├── components/    # 共享 UI 组件（28 个 NewXxx 面板）
-│   ├── ui/             # 像素 UI 库（PixelPanel / PixelButton / Chip ...）
-│   ├── ui/hud/         # NewGameAppHUD 子组件（AvatarPanel / CVBar / IconBar ...）
-│   ├── hooks/          # React hooks（useProfile / useCV / useLevel / useChatMessages ...）
-│   ├── pages/          # 路由页面（LandingPage / NewGameAppHUD / ManualPage ...）
-│   ├── lib/            # 数据 store（chatStore / questStore / proposalStore ...）
-│   ├── game/           # Phaser 场景 + EventBus
-│   └── styles/         # design-system.css
-├── docs/               # 开发文档（wave-2-summary.md ...）
-└── sql/                # Supabase migration（25 个 .sql 文件）
+☐ 1. 接受任务 · 提交（任意 https URL）
+☐ 2. 切到 "审核中" tab
+☐ 3. 看到 "可撤回 N s" 数字 · **每秒 -1**
+☐ 4. 0 秒后变 "撤回窗口已过"（仅当过期 + 还没收到 quorum 时）
+☐ 5. 关闭面板 · 1s tick 自动停止（节省资源）
+☐ 6. 重开面板 · 倒计时继续准确
+```
+
+### Q3 · 申诉流入口
+```
+☐ 7. "已完成" tab 看到任务 · 右下有 "发起申诉" 按钮（如果未申诉过）
+☐ 8. 点 "发起申诉" → modal 弹出（420 宽 · 灰色背景遮罩）
+☐ 9. modal 显示：自评 vs 评审 + 入账 CV chip
+☐ 10. 申诉规则提示（30-90 秒 / 只上调 / CV 不扣除）
+☐ 11. 点 "再想想" 关闭 modal
+☐ 12. 点 "确认申诉" → toast 提示 + 任务移到 "审核中" tab（appealing 状态）
+☐ 13. ESC · 优先关 modal · 不关面板
+☐ 14. 申诉中状态 · 看到复审员投票列表（每收到一票就显示）
+```
+
+### Q4 · CV 完整版金光动画
+```
+☐ 15. 提交后等审核员投票（30-90 秒）
+☐ 16. quorum 完成 · 任务自动移到 "已完成" tab
+☐ 17. 看到大金色卡片：
+       · "★ CV 入 账 ★" eyebrow
+       · 数字 0 → cpEarned 滚动（800ms · ease-out）
+       · 金光环扩散（1.5s · 4x 缩放 + opacity 衰减）
+       · 背景径向闪光（600ms）
+       · 浮动 +N CV（normal 3 个 · excellent 5 个 · 1.6s 浮上飘）
+☐ 18. 10 秒后 · 退化为静态 chip "+N CV · x1.0 · 日期"
+☐ 19. 重开面板 · 已经过 10s 的不再播动画（直接静态）
+☐ 20. x2.0 卓越任务 · 浮动 +N 数量更多
+```
+
+### ReviewerVoteCard（reviewing tab）
+```
+☐ 21. "审核中" tab · 看到任务 · 收到投票后展开 extra
+☐ 22. 看到 "审核员意见" eyebrow
+☐ 23. 每条投票卡：头像 + 名字 + coeff chip + 评论（斜体）
+☐ 24. coeff x0.5 红 / x1.0 普通 / x2.0 金
+```
+
+### 兼容性
+```
+☐ 接受 / 提交 / 撤回 流程仍正常
+☐ ReviewProcessor / AppealProcessor headless 仍正常工作
+☐ Mail / Chat / Friends / 议政 / 远见塔 等 panel 仍能开
 ```
 
 ---
 
-## 设计系统
+## ⚠️ 已知限制
 
-像素古籍风 · 受**宋代雕版印刷**启发：
-
-- **配色** · paper-0/1/2/3（米黄）+ wood-1/2/3/4（深木色）+ gold（鎏金）+ ink（墨黑）
-- **字体** · `Ma Shan Zheng`（标题）/ `ZCOOL XiaoWei`（标题次）/ `霞鹜文楷`（正文）/ `Inter`（数字）
-- **像素 vs 古籍** · 边框使用像素角（::before/::after 4×4 木色方块） · 整体保持古籍纸质感
-- **行距** · 正文 1.7 · 古籍呼吸感
-
-详见 `src/styles/design-system.css`。
+- ⚠️ **Q1 审核员投票动画完整版** 留 Wave 2.5.A.4（chip 滑入 + 全屏 toast + 烟花）
+- ⚠️ **CV 动画窗口 10 秒** · 在 finalizedAt + 10s 内打开面板才看到动画 · 错过就静态
+- ⚠️ **申诉 modal 是 React DOM** · 不是 Phaser 内 [E] 触发的明镜阁 panel · 两个入口并存
+- ⚠️ **撤回倒计时仅当 panel 打开时跑** · 关闭面板时 1s tick 自动停止（节省资源 · 但偶发跳秒不准）
 
 ---
 
-## 贡献
+## ⚠️ 紧急回滚
 
-CUA 基地是为 WebAgentLab 社区打造的 —— 欢迎提 Issue · 欢迎 PR · 欢迎来玩。
+```powershell
+# 回滚 NewQuestLog 到 Wave 2.5.A.2 版本
+git checkout src/components/NewQuestLog.tsx
 
+# 删 Wave 2.5.A.3 新文件
+Remove-Item src\hooks\useCountdownTick.ts -Force
+Remove-Item src\components\ReviewerVoteCard.tsx -Force
+Remove-Item src\components\AppealConfirmModal.tsx -Force
+Remove-Item src\components\CVRewardBurst.tsx -Force
+git checkout src/hooks/index.ts
 ```
-GitHub: https://github.com/Leoatsr/cua-base
-社区:    WebAgentLab
-作者:    Leoatsr
+
+---
+
+## Push
+
+```powershell
+git add .
+git commit -m "Wave 2.5.A.3: QuestLog Q2/Q3/Q4 (countdown + appeal + CV animation)
+
+Q2 · Withdraw countdown 1s tick:
+- useCountdownTick hook (interval-based · auto-stop when panel closed)
+- Live remaining seconds in reviewing tab
+
+Q3 · Appeal flow inline:
+- AppealConfirmModal (420w · self vs final + rules + CV chip)
+- 'Submit appeal' button on completed quests (if !appealed)
+- ESC stack: modal → submit form → panel
+- 100% compatible with NewAppealDeskPanel (same startAppealState API)
+
+Q4 · CV full reward animation:
+- CVRewardBurst component (10s window after finalizedAt)
+- Number rolling 0 → cpEarned (800ms ease-out cubic)
+- Gold ring expand (1.5s · 4x scale)
+- Background radial flash (600ms)
+- Floating +N (3 normal / 5 excellent · 1.6s upward)
+
+ReviewerVoteCard:
+- Replaces plain '0/3' text in reviewing tab
+- Avatar + name + coeff chip + italic comment
+
+Q1 (reviewer vote animation full version) → Wave 2.5.A.4"
+
+git push
 ```
 
 ---
 
-## 相关项目
+## 下一波
 
-- 🌸 [花信风 (HuaXinFeng)](https://github.com/Leoatsr/HUAXIN) · 传统 24 番花信风物候地图
-- 📜 [唐代诗人足迹地图](https://github.com/Leoatsr/zujiditu) · 40 唐代诗人 462 足迹
+回我**一个**：
 
----
-
-## License
-
-MIT
+- **"完成 · 进 Wave 2.5.A.4"** = Q1 审核员投票动画完整版（4-5h 单波）
+- **"完成 · 暂停找用户测"**
+- **"调整某处"** + 写出
