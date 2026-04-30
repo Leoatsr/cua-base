@@ -1,32 +1,54 @@
-# Wave 2.5.A.4 · QuestLog 审核员投票动画完整版（Q1）
+# Wave 3.B · CodexPage 完整版
 
-UI 重构第 2 波 · QuestLog 最后一步 — **审核员投票完整动画 + Quorum toast + 烟花**
+UI 重构第 3 波 · 第 2 步 — **图鉴独立页面（6 tab 完整版）**
 
 ---
 
 ## 这一波做了什么
 
-### Q1 完整版动画
+✅ CodexPage.tsx · 像素古籍风 6 tab 完整图鉴
+- 顶部横向 tab（vs Manual 的左侧 sidebar）
+- 6 tab：工坊 / NPC / 等级 / 任务 / 审核员 / 节气
+- 数据 100% 复用现有源（gameMeta + questDefinitions + reviewers + timeStore）
 
-| 动画 | 描述 |
-|---|---|
-| **Chip 滑入** | 收到投票时 · 从右滑入 + cubic-bezier 弹回（0.6s）|
-| **金光晕** | fresh 卡片金色 box-shadow 脉动（1.2s）|
-| **进度条** | 0% → 33% → 66% → 100% · 弹性曲线 + shine 光带 |
-| **Quorum toast** | 完成时 · 全屏金色卡片旋转弹出（2.5s）|
-| **烟花粒子** | 12 个粒子径向飞散 + 旋转（0.8-1.4s）|
-
-### 文件清单
-
+✅ 文件清单
 ```
-🆕 src/hooks/useFreshVotes.ts            (跟踪刚到的投票 · EventBus reviewer-vote-cast)
-🆕 src/hooks/useQuorumEvent.ts           (监听 quest-finalized 触发 toast)
-🆕 src/components/ReviewProgressBar.tsx  (弹性进度条 + shine)
-🆕 src/components/QuorumToast.tsx        (全屏 toast + 12 烟花粒子)
-🔄 src/components/ReviewerVoteCard.tsx   (加 isFresh 滑入 + 金光晕)
-🔄 src/components/NewQuestLog.tsx        (整合 4 个组件 + 2 hooks)
-🔄 src/hooks/index.ts                    (加 export)
+🆕 src/pages/CodexPage.tsx           (~700 行 · 6 tab + 4 helper 子组件)
+🆕 src/lib/solarTermsData.ts         (24 节气数据 + 描述 + 物候特征)
+🆕 src/lib/reviewerProfiles.ts       (3 审核员 + 3 申诉员人物档案)
 ```
+
+---
+
+## 6 Tab 内容总览
+
+### Tab 1 · 🏛 工坊（9 个 · 复用 gameMeta WORKSHOPS）
+- 卡片网格（3 列）· 每卡片像素图标 + 名字 + 板块 chip + 描述
+- 9 工坊：播客 / 百科 / 数据 / 内参 / 招聘 / 会议 / 开源 / 测评 / 生态
+- 3 板块：降噪 / 链接 / 共创
+
+### Tab 2 · 👥 NPC（6 个 · 复用 gameMeta NPCS）
+- 卡片网格（2 列）· 头像 + 名字 + 区域 chip + 角色 + 一句话台词
+- 6 NPC：村长阿降 / 周明 / 严之 / 白徽 / 阿香 / 议长
+
+### Tab 3 · 🎖 等级（5 个 · 复用 gameMeta LEVELS）
+- 列表 · L0-L4 + CV 阈值 + 解锁区域
+- 底部 · 升级解锁权限说明（L1 投票权 / L2 议政 / L3 复议 / L4 共建）
+
+### Tab 4 · 📋 任务（5 真任务 · 复用 questDefinitions）
+- 完整 · 标题 + 难度 chip + CP chip + 估时 + 描述 + 质量评判 + 验收
+- 5 任务：单篇论文 / 作者卡片 / 周抽查 / 自动化脚本 / 季度研判
+
+### Tab 5 · ⚖ 审核员（6 个）
+- 主审：周明（严谨）/ 严之（挑剔）/ 白徽（稳健）
+- 申诉：谢忱（公正）/ 李明（严苛）/ 苏砚（宽厚）
+- 卡片：头像 + 名字 + role chip + 性格 + 评审风格 + 偏好 + 投票延迟
+- 底部 · 申诉规则说明
+
+### Tab 6 · 🌱 节气（24 个 · 复用 timeStore SOLAR_TERMS）
+- 按四季分组：春 / 夏 / 秋 / 冬（每季 6 节气）
+- 每节气卡片 · emoji 图标 + 名字 + 诗意描述 + 物候特征
+- 季节背景色调（春绿 / 夏黄 / 秋橙 / 冬蓝）
 
 ---
 
@@ -35,27 +57,64 @@ UI 重构第 2 波 · QuestLog 最后一步 — **审核员投票完整动画 + 
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a4.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave3b.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-5a4\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-5a4 -Recurse -Force
+Copy-Item -Path .\cua-spike-wave3b\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave3b -Recurse -Force
 
 # 验证
-Test-Path src\hooks\useFreshVotes.ts
-Test-Path src\hooks\useQuorumEvent.ts
-Test-Path src\components\ReviewProgressBar.tsx
-Test-Path src\components\QuorumToast.tsx
+Test-Path src\pages\CodexPage.tsx
+Test-Path src\lib\solarTermsData.ts
+Test-Path src\lib\reviewerProfiles.ts
 ```
 
-期望 4 个 `True`。
+期望 3 个 `True`。
 
 ---
 
-## 不需要改 App.tsx
+## ⚠️ 必须改 App.tsx · 把 CodexPage import 从 ComingSoon 拆出来
 
-NewQuestLog 已在 App.tsx · 这次只升级文件内容。
+跟 ManualPage 一样的修复：
+
+```powershell
+cd D:\projects\cua-base
+
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave3b -ErrorAction SilentlyContinue
+
+$content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
+
+# 旧 import:
+# import { ManualPage } from './pages/ManualPage';
+# import { CodexPage, MapsPage } from './pages/ComingSoon';
+# 新 import:
+# import { ManualPage } from './pages/ManualPage';
+# import { CodexPage } from './pages/CodexPage';
+# import { MapsPage } from './pages/ComingSoon';
+
+$old = "import { CodexPage, MapsPage } from './pages/ComingSoon';"
+$new = "import { CodexPage } from './pages/CodexPage';`r`nimport { MapsPage } from './pages/ComingSoon';"
+$content = $content.Replace($old, $new)
+
+[System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
+
+# 验证
+Write-Host "=== 修改后 imports ==="
+Select-String -Path src\App.tsx -Pattern "ManualPage|CodexPage|MapsPage" | Format-Table LineNumber, Line -Wrap
+```
+
+期望看到：
+```
+LineNumber  Line
+----------  ----
+        66  import { ManualPage } from './pages/ManualPage';
+        67  import { CodexPage } from './pages/CodexPage';
+        68  import { MapsPage } from './pages/ComingSoon';
+       312  <Route path="/manual" element={<ManualPage />} />
+       313  <Route path="/codex" element={<CodexPage />} />
+       314  <Route path="/maps" element={<MapsPage />} />
+```
 
 ---
 
@@ -65,179 +124,44 @@ NewQuestLog 已在 App.tsx · 这次只升级文件内容。
 pnpm dev
 ```
 
-按 **J** 打开任务日志。
-
----
-
-## 测试 · 必须用 F12 测试入口
-
-⚠️ **审核员投票真实需要 30-90 秒** · 直接接任务等不现实。F12 模拟最快。
-
-### Step 1 · 准备一个 reviewing 任务
-
-F12 Console 跑：
-
-```javascript
-const s = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}');
-s['paper-import'] = {
-  status: 'reviewing',
-  submissionLink: 'https://github.com/test/demo',
-  selfRated: 1.0,
-  submissionId: 'test-' + Date.now(),
-  submittedAt: Date.now(),
-  withdrawDeadline: Date.now() + 60000,
-  votes: [],
-};
-localStorage.setItem('cua-yuanye-quests-workshop-v2', JSON.stringify(s));
-location.reload();
-```
-
-刷新后 · 按 J · 切到**审核中** tab · 看到 paper-import 卡片 + **空进度条**（0/3 票）。
-
-### Step 2 · 模拟收到投票（一票一票来）
-
-F12 Console 跑（**保持 NewQuestLog 打开**）：
-
-```javascript
-import('/src/game/EventBus.ts').then(m => {
-  window.__EventBus = m.EventBus;
-  // 收到第 1 票
-  m.EventBus.emit('reviewer-vote-cast', {
-    submissionId: JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId,
-    vote: {
-      reviewerId: 'zhouming',
-      reviewerName: '周明',
-      coeff: 1.0,
-      comment: '基本达标，流派标签准确',
-      votedAt: Date.now(),
-    },
-  });
-});
-```
-
-⚠️ **但是** —— `reviewer-vote-cast` 只触发**前端 fresh 动画** · **不会**真正写到 localStorage。要真的让卡片显示新投票需要直接改 questStore：
-
-```javascript
-// 完整模拟收到一票（写 store + emit event）
-import('/src/lib/questStore.ts').then(qs => {
-  import('/src/game/EventBus.ts').then(eb => {
-    window.__EventBus = eb.EventBus;
-    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
-    const vote = {
-      reviewerId: 'zhouming',
-      reviewerName: '周明',
-      coeff: 1.0,
-      comment: '基本达标，流派标签准确',
-      votedAt: Date.now(),
-    };
-    qs.addReviewerVote(submissionId, vote);
-    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
-    console.log('✓ 第 1 票模拟完成 · 看 chip 滑入 + 金光晕 + 进度条 33%');
-  });
-});
-```
-
-### Step 3 · 模拟收到第 2 票（不同 reviewer）
-
-```javascript
-import('/src/lib/questStore.ts').then(qs => {
-  import('/src/game/EventBus.ts').then(eb => {
-    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
-    const vote = {
-      reviewerId: 'yanzhi',
-      reviewerName: '严之',
-      coeff: 2.0,
-      comment: '隐藏 Repo 链接补全 · 高质量',
-      votedAt: Date.now(),
-    };
-    qs.addReviewerVote(submissionId, vote);
-    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
-    console.log('✓ 第 2 票完成 · 进度条 66%');
-  });
-});
-```
-
-### Step 4 · 模拟收到第 3 票 + 触发 finalize（关键 · 看 toast + 烟花）
-
-```javascript
-import('/src/lib/questStore.ts').then(qs => {
-  import('/src/game/EventBus.ts').then(eb => {
-    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
-    const vote = {
-      reviewerId: 'baihui',
-      reviewerName: '白徽',
-      coeff: 1.0,
-      comment: '稳健 · 标准达标',
-      votedAt: Date.now(),
-    };
-    qs.addReviewerVote(submissionId, vote);
-    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
-    console.log('✓ 第 3 票完成 · 0.5s 后会触发 quorum');
-
-    // ReviewProcessor 监听 reviewer-quorum-reached · 但因为我们直接 emit reviewer-vote-cast 没有 quorum 检查
-    // 直接 emit quest-finalized 触发 toast
-    setTimeout(() => {
-      eb.EventBus.emit('quest-finalized', {
-        taskId: 'paper-import',
-        questTitle: '单篇论文入库',
-        finalCoeff: 1.5,
-        cpEarned: 18,
-      });
-      console.log('✓ quest-finalized · 看全屏 toast + 烟花');
-    }, 500);
-  });
-});
-```
+打开 `http://localhost:5173/codex`
 
 ---
 
 ## 测试清单
 
 ```
-☐ 1. Step 1 · 进入 reviewing 状态 · 看到空进度条 0/3
-☐ 2. Step 2 · 第 1 票 · chip 从右滑入 + 弹回 + 金光晕（1.2s 衰退）
-☐ 3. Step 2 · 进度条从 0% 弹性增长到 33%
-☐ 4. Step 2 · 进度条上有 shine 光带 loop（2s）
-☐ 5. Step 3 · 第 2 票 · 同样滑入 + 金光晕 · 进度条 33% → 66%
-☐ 6. Step 4 · 第 3 票 · chip 滑入 · 进度条 66% → 100%
-☐ 7. Step 4 · 0.5s 后 · 全屏金色 toast 弹出（旋转 + 弹性）
-☐ 8. Step 4 · toast 显示 "★ 审 核 完 成 ★ + 任务名 + x1.5 + +18 CV 入账"
-☐ 9. Step 4 · 12 个金色粒子径向飞散 + 旋转
-☐ 10. 2.5 秒后 · toast 自动消失
-☐ 11. 静态投票卡（已存在的 vote）· 不应再播 fresh 动画
-☐ 12. ESC 关闭面板 · 1s tick + 事件监听全部停止（节省资源）
-```
-
-### 兼容性
-
-```
-☐ Q2 撤回倒计时仍正常（每秒跳秒）
-☐ Q3 申诉 modal 仍正常
-☐ Q4 CV 金光动画仍正常
-☐ 接受 / 提交 / 撤回流程仍正常
+☐ 1. 顶栏 · 返回首页 + 图鉴标题 + 手册/进入游戏链接
+☐ 2. 顶部横向 6 tab · 默认选中 工坊
+☐ 3. 切 tab · 当前 tab 米黄背景 + 金色下划线
+☐ 4. "工坊" tab · 9 个卡片 · 每卡片 emoji + 名字 + 板块 chip + 描述
+☐ 5. "NPC" tab · 6 个卡片 · 含村长阿降 + 高粱（百晓居首席被列在 NPCS 数组里? 验证）
+☐ 6. "等级" tab · L0-L4 列表 + 底部解锁说明
+☐ 7. "任务" tab · 5 真任务 · 难度 chip 颜色（入门绿/中等金/困难红）+ CP + 估时
+☐ 8. "审核员" tab · 主审 3 个 + 申诉 3 个 · 性格描述 + 偏好 + 投票延迟
+☐ 9. "节气" tab · 24 节气按春夏秋冬分组 · 季节背景色不同
+☐ 10. ESC · 返回首页
+☐ 11. 顶栏 "手册" 链接 · 跳转 /manual
+☐ 12. 顶栏 "进入游戏" · 跳转 /play
 ```
 
 ---
 
 ## ⚠️ 已知限制
 
-- ⚠️ **Fresh 动画依赖 reviewer-vote-cast EventBus event**：如果直接修改 localStorage 不 emit · chip 不会播 fresh
-- ⚠️ **Quorum toast 触发于 quest-finalized**：实际游戏内是 ReviewProcessor 在 quorum 达成时 emit · 测试时需要手动 emit
-- ⚠️ **toast 仅在 NewQuestLog 打开时触发**：关闭面板时 useQuorumEvent 自动停止
-- ⚠️ **同一 votedAt 不会重复触发 fresh**：useFreshVotes 用 Set<votedAt>
+- ⚠️ **NPC tab 没有 高粱（百晓居首席）** · 因为 gameMeta NPCS 只有 6 个 · 高粱在 SproutCityScene.ts 里独立定义
+- ⚠️ **节气描述** · 来自我编写的诗意 + 七十二候物候 · 非官方
+- ⚠️ **审核员人物档案** · 来自 reviewers.ts voteFn 行为反推 · 非显式定义
 
 ---
 
 ## ⚠️ 紧急回滚
 
 ```powershell
-git checkout src/components/NewQuestLog.tsx
-git checkout src/components/ReviewerVoteCard.tsx
-Remove-Item src\hooks\useFreshVotes.ts -Force
-Remove-Item src\hooks\useQuorumEvent.ts -Force
-Remove-Item src\components\ReviewProgressBar.tsx -Force
-Remove-Item src\components\QuorumToast.tsx -Force
-git checkout src/hooks/index.ts
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave3b src\App.tsx
+Remove-Item src\pages\CodexPage.tsx -Force
+Remove-Item src\lib\solarTermsData.ts -Force
+Remove-Item src\lib\reviewerProfiles.ts -Force
 ```
 
 ---
@@ -246,54 +170,36 @@ git checkout src/hooks/index.ts
 
 ```powershell
 git add .
-git commit -m "Wave 2.5.A.4: Q1 reviewer vote full animation
+git commit -m "Wave 3.B: CodexPage full rewrite
 
-Reviewer vote chip slide-in:
-- ReviewerVoteCard: isFresh prop -> 0.6s slide-in (cubic-bezier elastic)
-                     + 1.2s gold glow pulse
-- useFreshVotes: track recent votes via reviewer-vote-cast EventBus event
-                  Set<votedAt>, auto-clear after 1.5s
+CodexPage (~700 lines, 6 tabs):
+- workshops: 9 workshops grid (gameMeta WORKSHOPS)
+- npcs: 6 NPCs cards (gameMeta NPCS)
+- levels: L0-L4 list + unlock rules (gameMeta LEVELS)
+- quests: 5 real quests detail (questDefinitions QUESTS)
+- reviewers: 3 main + 3 appeal profiles (new reviewerProfiles.ts)
+- solar: 24 solar terms grouped by season (new solarTermsData.ts)
 
-Review progress bar:
-- ReviewProgressBar component: 0%/33%/66%/100% elastic transition
-- Shine light band loops while in progress (2s)
+Top-bar horizontal tabs (vs Manual sidebar)
+ESC returns to landing
+Pixel scroll aesthetic + season-colored backgrounds
 
-Quorum toast (in-panel):
-- QuorumToast component: full-screen overlay within NewQuestLog (540x600)
-- Gold card pop-rotate 2.5s (cubic-bezier elastic)
-- 12 firework particles radial fly + rotation
-- useQuorumEvent: listens to quest-finalized, emits triggerKey
+App.tsx: import CodexPage from ./pages/CodexPage (no longer ComingSoon stub)
 
-Wave 2 100% complete (16 panels migrated + 4 wave 2.5.A sub-iterations)"
+Wave 3.A + 3.B = Manual + Codex 100% complete."
 
 git push
 ```
 
 ---
 
-## 🎉 Wave 2 真完成
-
-```
-✅ 2.1 · NewGameAppHUD（10 components）
-✅ 2.2.A · 5 hooks + 替换 4 个 HUD
-✅ 2.3.A · NewChatPanel 世界
-✅ 2.3.B · NewChatPanel 完整版
-✅ 2.4 · NewMailBox + NewFriendsPanel
-✅ 2.5.A · NewAnnouncementPanel
-✅ 2.5.A.2 · NewQuestLog 80% 视觉
-✅ 2.5.A.3 · Q2 撤回 + Q3 申诉 + Q4 CV 动画
-✅ 2.5.A.4 · Q1 审核员投票完整动画 ⬅ 这次
-✅ 2.5.B · 议政 3 panel
-✅ 2.5.C · 远见塔/功德堂/自家小屋
-✅ 2.6 · 删 16 个旧组件
-✅ 2.6.B · README + docs
-```
-
-## 下一步 · 强烈建议
+## 下一步
 
 回我**一个**：
 
-- **"Wave 2 真完成 · 暂停找用户测"** ✅ **强推**
-- **"merge ui-redesign 到 main + 部署生产"**
-- **"Wave 3 · GitHub Issues 双向同步"**
-- **"调整某处"**
+- **"全好 · push + 进 Wave 4 (MapsPage)"** = 工作量 2-3h
+- **"全好 · push + 暂停找用户测"** ✅ 强推
+- **"X 有问题"** + 描述
+- **"先看 NPCs · 加百晓居首席高粱进 gameMeta"** = +0.5h 小任务
+
+⚠️ Wave 4 MapsPage 是最后一波 · 简单 · 但你可以选先暂停测一下。
