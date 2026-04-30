@@ -55,7 +55,7 @@ import { sessionTracker } from './lib/sessionTracker';
 import { friendsPresence } from './lib/friendsPresence';
 import { emoteManager } from './lib/emoteManager';
 import { chatManager } from './lib/chatStore';
-import { bots } from './lib/fakeBot';
+// Wave 5.A.fix-delete-bot: removed import { bots } from './lib/fakeBot'; — fake bot system disabled
 import { fetchMyProfile } from './lib/profileStore';
 import { fetchUserFace, getFaceLocal } from './lib/faceStore';
 import { ensureProfile } from './lib/profileStore';
@@ -172,11 +172,8 @@ function MainGameApp() {
       timeSettings.load();
       // Pack S2-A: start solar term notifier
       startSolarTermNotifier();
-      // Spawn 5 fake bots (auto, only in Main scene for G1.0)
-      // Skip if already spawned (idempotent for StrictMode double-mount)
-      if (bots.bots.size === 0) {
-        bots.spawn(5, 'Main');
-      }
+      // Wave 5.A.fix-delete-bot: removed bots.spawn(5, 'Main') — fake bot system disabled
+      // Players now only see real remote players (Supabase Realtime presence) + NPCs
     };
     void initMultiplayer();
 
