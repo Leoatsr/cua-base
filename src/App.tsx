@@ -65,7 +65,7 @@ import { startUserTracker } from './lib/userTracker';
 import { LandingPage } from './pages/Landing';
 import { ManualPage } from './pages/ManualPage';
 import { CodexPage } from './pages/CodexPage';
-import { MapsPage } from './pages/ComingSoon';
+import { MapsPage } from './pages/MapsPage';
 import { GameViewPreview } from './pages/GameViewPreview';
 import { NewGameAppHUD } from './pages/NewGameAppHUD';
 import { NewChatPanel } from './components/NewChatPanel';
