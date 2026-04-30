@@ -1,28 +1,31 @@
-# Wave 2.5.A.3 · QuestLog 审核流像素化（80% · Q2/Q3/Q4）
+# Wave 2.5.A.4 · QuestLog 审核员投票动画完整版（Q1）
 
-UI 重构第 2 波 · QuestLog 完整化 — **撤回倒计时 + 申诉流 + CV 金光动画**
+UI 重构第 2 波 · QuestLog 最后一步 — **审核员投票完整动画 + Quorum toast + 烟花**
 
 ---
 
 ## 这一波做了什么
 
-### 3 个子功能
+### Q1 完整版动画
 
-| Q | 功能 | 状态 |
-|---|---|---|
-| **Q2** | 撤回倒计时 1s tick 实时刷新 | ✅ 完成 |
-| **Q3** | 申诉流入口（已完成 tab "发起申诉"按钮 + 确认 modal） | ✅ 完成 |
-| **Q4** | CV 完整版金光动画（数字滚 + 金光环 + 闪光 + 浮动 +N） | ✅ 完成 |
-| **Q1** | 审核员投票动画完整版（chip 滑入 + 完成 toast + 烟花） | ⏳ Wave 2.5.A.4 |
+| 动画 | 描述 |
+|---|---|
+| **Chip 滑入** | 收到投票时 · 从右滑入 + cubic-bezier 弹回（0.6s）|
+| **金光晕** | fresh 卡片金色 box-shadow 脉动（1.2s）|
+| **进度条** | 0% → 33% → 66% → 100% · 弹性曲线 + shine 光带 |
+| **Quorum toast** | 完成时 · 全屏金色卡片旋转弹出（2.5s）|
+| **烟花粒子** | 12 个粒子径向飞散 + 旋转（0.8-1.4s）|
 
 ### 文件清单
+
 ```
-🆕 src/hooks/useCountdownTick.ts        (Q2 1s tick)
-🆕 src/components/ReviewerVoteCard.tsx  (审核员意见显示 · 简版 chip)
-🆕 src/components/AppealConfirmModal.tsx (Q3 申诉确认弹窗)
-🆕 src/components/CVRewardBurst.tsx     (Q4 完整版动画)
-🔄 src/components/NewQuestLog.tsx       (整合 Q2/Q3/Q4)
-🔄 src/hooks/index.ts                   (加 useCountdownTick export)
+🆕 src/hooks/useFreshVotes.ts            (跟踪刚到的投票 · EventBus reviewer-vote-cast)
+🆕 src/hooks/useQuorumEvent.ts           (监听 quest-finalized 触发 toast)
+🆕 src/components/ReviewProgressBar.tsx  (弹性进度条 + shine)
+🆕 src/components/QuorumToast.tsx        (全屏 toast + 12 烟花粒子)
+🔄 src/components/ReviewerVoteCard.tsx   (加 isFresh 滑入 + 金光晕)
+🔄 src/components/NewQuestLog.tsx        (整合 4 个组件 + 2 hooks)
+🔄 src/hooks/index.ts                    (加 export)
 ```
 
 ---
@@ -32,18 +35,18 @@ UI 重构第 2 波 · QuestLog 完整化 — **撤回倒计时 + 申诉流 + CV 
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a3.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a4.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-5a3\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-5a3 -Recurse -Force
+Copy-Item -Path .\cua-spike-wave2-5a4\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-5a4 -Recurse -Force
 
 # 验证
-Test-Path src\hooks\useCountdownTick.ts
-Test-Path src\components\ReviewerVoteCard.tsx
-Test-Path src\components\AppealConfirmModal.tsx
-Test-Path src\components\CVRewardBurst.tsx
+Test-Path src\hooks\useFreshVotes.ts
+Test-Path src\hooks\useQuorumEvent.ts
+Test-Path src\components\ReviewProgressBar.tsx
+Test-Path src\components\QuorumToast.tsx
 ```
 
 期望 4 个 `True`。
@@ -52,7 +55,7 @@ Test-Path src\components\CVRewardBurst.tsx
 
 ## 不需要改 App.tsx
 
-NewQuestLog 已经在 App.tsx 引用（Wave 2.5.A.2 装的）—— 这次只是升级文件内容，App.tsx 不变。
+NewQuestLog 已在 App.tsx · 这次只升级文件内容。
 
 ---
 
@@ -62,86 +65,178 @@ NewQuestLog 已经在 App.tsx 引用（Wave 2.5.A.2 装的）—— 这次只是
 pnpm dev
 ```
 
-打开 `http://localhost:5173/play` 登录进游戏。按 J 键 / 点 NewGameAppHUD 📋
+按 **J** 打开任务日志。
+
+---
+
+## 测试 · 必须用 F12 测试入口
+
+⚠️ **审核员投票真实需要 30-90 秒** · 直接接任务等不现实。F12 模拟最快。
+
+### Step 1 · 准备一个 reviewing 任务
+
+F12 Console 跑：
+
+```javascript
+const s = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}');
+s['paper-import'] = {
+  status: 'reviewing',
+  submissionLink: 'https://github.com/test/demo',
+  selfRated: 1.0,
+  submissionId: 'test-' + Date.now(),
+  submittedAt: Date.now(),
+  withdrawDeadline: Date.now() + 60000,
+  votes: [],
+};
+localStorage.setItem('cua-yuanye-quests-workshop-v2', JSON.stringify(s));
+location.reload();
+```
+
+刷新后 · 按 J · 切到**审核中** tab · 看到 paper-import 卡片 + **空进度条**（0/3 票）。
+
+### Step 2 · 模拟收到投票（一票一票来）
+
+F12 Console 跑（**保持 NewQuestLog 打开**）：
+
+```javascript
+import('/src/game/EventBus.ts').then(m => {
+  window.__EventBus = m.EventBus;
+  // 收到第 1 票
+  m.EventBus.emit('reviewer-vote-cast', {
+    submissionId: JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId,
+    vote: {
+      reviewerId: 'zhouming',
+      reviewerName: '周明',
+      coeff: 1.0,
+      comment: '基本达标，流派标签准确',
+      votedAt: Date.now(),
+    },
+  });
+});
+```
+
+⚠️ **但是** —— `reviewer-vote-cast` 只触发**前端 fresh 动画** · **不会**真正写到 localStorage。要真的让卡片显示新投票需要直接改 questStore：
+
+```javascript
+// 完整模拟收到一票（写 store + emit event）
+import('/src/lib/questStore.ts').then(qs => {
+  import('/src/game/EventBus.ts').then(eb => {
+    window.__EventBus = eb.EventBus;
+    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
+    const vote = {
+      reviewerId: 'zhouming',
+      reviewerName: '周明',
+      coeff: 1.0,
+      comment: '基本达标，流派标签准确',
+      votedAt: Date.now(),
+    };
+    qs.addReviewerVote(submissionId, vote);
+    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
+    console.log('✓ 第 1 票模拟完成 · 看 chip 滑入 + 金光晕 + 进度条 33%');
+  });
+});
+```
+
+### Step 3 · 模拟收到第 2 票（不同 reviewer）
+
+```javascript
+import('/src/lib/questStore.ts').then(qs => {
+  import('/src/game/EventBus.ts').then(eb => {
+    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
+    const vote = {
+      reviewerId: 'yanzhi',
+      reviewerName: '严之',
+      coeff: 2.0,
+      comment: '隐藏 Repo 链接补全 · 高质量',
+      votedAt: Date.now(),
+    };
+    qs.addReviewerVote(submissionId, vote);
+    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
+    console.log('✓ 第 2 票完成 · 进度条 66%');
+  });
+});
+```
+
+### Step 4 · 模拟收到第 3 票 + 触发 finalize（关键 · 看 toast + 烟花）
+
+```javascript
+import('/src/lib/questStore.ts').then(qs => {
+  import('/src/game/EventBus.ts').then(eb => {
+    const submissionId = JSON.parse(localStorage.getItem('cua-yuanye-quests-workshop-v2') || '{}')['paper-import'].submissionId;
+    const vote = {
+      reviewerId: 'baihui',
+      reviewerName: '白徽',
+      coeff: 1.0,
+      comment: '稳健 · 标准达标',
+      votedAt: Date.now(),
+    };
+    qs.addReviewerVote(submissionId, vote);
+    eb.EventBus.emit('reviewer-vote-cast', { submissionId, vote });
+    console.log('✓ 第 3 票完成 · 0.5s 后会触发 quorum');
+
+    // ReviewProcessor 监听 reviewer-quorum-reached · 但因为我们直接 emit reviewer-vote-cast 没有 quorum 检查
+    // 直接 emit quest-finalized 触发 toast
+    setTimeout(() => {
+      eb.EventBus.emit('quest-finalized', {
+        taskId: 'paper-import',
+        questTitle: '单篇论文入库',
+        finalCoeff: 1.5,
+        cpEarned: 18,
+      });
+      console.log('✓ quest-finalized · 看全屏 toast + 烟花');
+    }, 500);
+  });
+});
+```
 
 ---
 
 ## 测试清单
 
-### Q2 · 撤回倒计时（看实时跳秒）
 ```
-☐ 1. 接受任务 · 提交（任意 https URL）
-☐ 2. 切到 "审核中" tab
-☐ 3. 看到 "可撤回 N s" 数字 · **每秒 -1**
-☐ 4. 0 秒后变 "撤回窗口已过"（仅当过期 + 还没收到 quorum 时）
-☐ 5. 关闭面板 · 1s tick 自动停止（节省资源）
-☐ 6. 重开面板 · 倒计时继续准确
-```
-
-### Q3 · 申诉流入口
-```
-☐ 7. "已完成" tab 看到任务 · 右下有 "发起申诉" 按钮（如果未申诉过）
-☐ 8. 点 "发起申诉" → modal 弹出（420 宽 · 灰色背景遮罩）
-☐ 9. modal 显示：自评 vs 评审 + 入账 CV chip
-☐ 10. 申诉规则提示（30-90 秒 / 只上调 / CV 不扣除）
-☐ 11. 点 "再想想" 关闭 modal
-☐ 12. 点 "确认申诉" → toast 提示 + 任务移到 "审核中" tab（appealing 状态）
-☐ 13. ESC · 优先关 modal · 不关面板
-☐ 14. 申诉中状态 · 看到复审员投票列表（每收到一票就显示）
-```
-
-### Q4 · CV 完整版金光动画
-```
-☐ 15. 提交后等审核员投票（30-90 秒）
-☐ 16. quorum 完成 · 任务自动移到 "已完成" tab
-☐ 17. 看到大金色卡片：
-       · "★ CV 入 账 ★" eyebrow
-       · 数字 0 → cpEarned 滚动（800ms · ease-out）
-       · 金光环扩散（1.5s · 4x 缩放 + opacity 衰减）
-       · 背景径向闪光（600ms）
-       · 浮动 +N CV（normal 3 个 · excellent 5 个 · 1.6s 浮上飘）
-☐ 18. 10 秒后 · 退化为静态 chip "+N CV · x1.0 · 日期"
-☐ 19. 重开面板 · 已经过 10s 的不再播动画（直接静态）
-☐ 20. x2.0 卓越任务 · 浮动 +N 数量更多
-```
-
-### ReviewerVoteCard（reviewing tab）
-```
-☐ 21. "审核中" tab · 看到任务 · 收到投票后展开 extra
-☐ 22. 看到 "审核员意见" eyebrow
-☐ 23. 每条投票卡：头像 + 名字 + coeff chip + 评论（斜体）
-☐ 24. coeff x0.5 红 / x1.0 普通 / x2.0 金
+☐ 1. Step 1 · 进入 reviewing 状态 · 看到空进度条 0/3
+☐ 2. Step 2 · 第 1 票 · chip 从右滑入 + 弹回 + 金光晕（1.2s 衰退）
+☐ 3. Step 2 · 进度条从 0% 弹性增长到 33%
+☐ 4. Step 2 · 进度条上有 shine 光带 loop（2s）
+☐ 5. Step 3 · 第 2 票 · 同样滑入 + 金光晕 · 进度条 33% → 66%
+☐ 6. Step 4 · 第 3 票 · chip 滑入 · 进度条 66% → 100%
+☐ 7. Step 4 · 0.5s 后 · 全屏金色 toast 弹出（旋转 + 弹性）
+☐ 8. Step 4 · toast 显示 "★ 审 核 完 成 ★ + 任务名 + x1.5 + +18 CV 入账"
+☐ 9. Step 4 · 12 个金色粒子径向飞散 + 旋转
+☐ 10. 2.5 秒后 · toast 自动消失
+☐ 11. 静态投票卡（已存在的 vote）· 不应再播 fresh 动画
+☐ 12. ESC 关闭面板 · 1s tick + 事件监听全部停止（节省资源）
 ```
 
 ### 兼容性
+
 ```
-☐ 接受 / 提交 / 撤回 流程仍正常
-☐ ReviewProcessor / AppealProcessor headless 仍正常工作
-☐ Mail / Chat / Friends / 议政 / 远见塔 等 panel 仍能开
+☐ Q2 撤回倒计时仍正常（每秒跳秒）
+☐ Q3 申诉 modal 仍正常
+☐ Q4 CV 金光动画仍正常
+☐ 接受 / 提交 / 撤回流程仍正常
 ```
 
 ---
 
 ## ⚠️ 已知限制
 
-- ⚠️ **Q1 审核员投票动画完整版** 留 Wave 2.5.A.4（chip 滑入 + 全屏 toast + 烟花）
-- ⚠️ **CV 动画窗口 10 秒** · 在 finalizedAt + 10s 内打开面板才看到动画 · 错过就静态
-- ⚠️ **申诉 modal 是 React DOM** · 不是 Phaser 内 [E] 触发的明镜阁 panel · 两个入口并存
-- ⚠️ **撤回倒计时仅当 panel 打开时跑** · 关闭面板时 1s tick 自动停止（节省资源 · 但偶发跳秒不准）
+- ⚠️ **Fresh 动画依赖 reviewer-vote-cast EventBus event**：如果直接修改 localStorage 不 emit · chip 不会播 fresh
+- ⚠️ **Quorum toast 触发于 quest-finalized**：实际游戏内是 ReviewProcessor 在 quorum 达成时 emit · 测试时需要手动 emit
+- ⚠️ **toast 仅在 NewQuestLog 打开时触发**：关闭面板时 useQuorumEvent 自动停止
+- ⚠️ **同一 votedAt 不会重复触发 fresh**：useFreshVotes 用 Set<votedAt>
 
 ---
 
 ## ⚠️ 紧急回滚
 
 ```powershell
-# 回滚 NewQuestLog 到 Wave 2.5.A.2 版本
 git checkout src/components/NewQuestLog.tsx
-
-# 删 Wave 2.5.A.3 新文件
-Remove-Item src\hooks\useCountdownTick.ts -Force
-Remove-Item src\components\ReviewerVoteCard.tsx -Force
-Remove-Item src\components\AppealConfirmModal.tsx -Force
-Remove-Item src\components\CVRewardBurst.tsx -Force
+git checkout src/components/ReviewerVoteCard.tsx
+Remove-Item src\hooks\useFreshVotes.ts -Force
+Remove-Item src\hooks\useQuorumEvent.ts -Force
+Remove-Item src\components\ReviewProgressBar.tsx -Force
+Remove-Item src\components\QuorumToast.tsx -Force
 git checkout src/hooks/index.ts
 ```
 
@@ -151,40 +246,54 @@ git checkout src/hooks/index.ts
 
 ```powershell
 git add .
-git commit -m "Wave 2.5.A.3: QuestLog Q2/Q3/Q4 (countdown + appeal + CV animation)
+git commit -m "Wave 2.5.A.4: Q1 reviewer vote full animation
 
-Q2 · Withdraw countdown 1s tick:
-- useCountdownTick hook (interval-based · auto-stop when panel closed)
-- Live remaining seconds in reviewing tab
+Reviewer vote chip slide-in:
+- ReviewerVoteCard: isFresh prop -> 0.6s slide-in (cubic-bezier elastic)
+                     + 1.2s gold glow pulse
+- useFreshVotes: track recent votes via reviewer-vote-cast EventBus event
+                  Set<votedAt>, auto-clear after 1.5s
 
-Q3 · Appeal flow inline:
-- AppealConfirmModal (420w · self vs final + rules + CV chip)
-- 'Submit appeal' button on completed quests (if !appealed)
-- ESC stack: modal → submit form → panel
-- 100% compatible with NewAppealDeskPanel (same startAppealState API)
+Review progress bar:
+- ReviewProgressBar component: 0%/33%/66%/100% elastic transition
+- Shine light band loops while in progress (2s)
 
-Q4 · CV full reward animation:
-- CVRewardBurst component (10s window after finalizedAt)
-- Number rolling 0 → cpEarned (800ms ease-out cubic)
-- Gold ring expand (1.5s · 4x scale)
-- Background radial flash (600ms)
-- Floating +N (3 normal / 5 excellent · 1.6s upward)
+Quorum toast (in-panel):
+- QuorumToast component: full-screen overlay within NewQuestLog (540x600)
+- Gold card pop-rotate 2.5s (cubic-bezier elastic)
+- 12 firework particles radial fly + rotation
+- useQuorumEvent: listens to quest-finalized, emits triggerKey
 
-ReviewerVoteCard:
-- Replaces plain '0/3' text in reviewing tab
-- Avatar + name + coeff chip + italic comment
-
-Q1 (reviewer vote animation full version) → Wave 2.5.A.4"
+Wave 2 100% complete (16 panels migrated + 4 wave 2.5.A sub-iterations)"
 
 git push
 ```
 
 ---
 
-## 下一波
+## 🎉 Wave 2 真完成
+
+```
+✅ 2.1 · NewGameAppHUD（10 components）
+✅ 2.2.A · 5 hooks + 替换 4 个 HUD
+✅ 2.3.A · NewChatPanel 世界
+✅ 2.3.B · NewChatPanel 完整版
+✅ 2.4 · NewMailBox + NewFriendsPanel
+✅ 2.5.A · NewAnnouncementPanel
+✅ 2.5.A.2 · NewQuestLog 80% 视觉
+✅ 2.5.A.3 · Q2 撤回 + Q3 申诉 + Q4 CV 动画
+✅ 2.5.A.4 · Q1 审核员投票完整动画 ⬅ 这次
+✅ 2.5.B · 议政 3 panel
+✅ 2.5.C · 远见塔/功德堂/自家小屋
+✅ 2.6 · 删 16 个旧组件
+✅ 2.6.B · README + docs
+```
+
+## 下一步 · 强烈建议
 
 回我**一个**：
 
-- **"完成 · 进 Wave 2.5.A.4"** = Q1 审核员投票动画完整版（4-5h 单波）
-- **"完成 · 暂停找用户测"**
-- **"调整某处"** + 写出
+- **"Wave 2 真完成 · 暂停找用户测"** ✅ **强推**
+- **"merge ui-redesign 到 main + 部署生产"**
+- **"Wave 3 · GitHub Issues 双向同步"**
+- **"调整某处"**

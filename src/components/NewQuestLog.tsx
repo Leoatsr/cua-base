@@ -16,6 +16,11 @@ import { SubmissionForm } from './SubmissionForm';
 import { ReviewerVoteCard } from './ReviewerVoteCard';
 import { CVRewardBurst } from './CVRewardBurst';
 import { AppealConfirmModal } from './AppealConfirmModal';
+import { ReviewProgressBar } from './ReviewProgressBar';
+import { QuorumToast } from './QuorumToast';
+import { useFreshVotes } from '../hooks/useFreshVotes';
+import { useQuorumEvent } from '../hooks/useQuorumEvent';
+import { QUESTS as ALL_QUESTS } from '../lib/questDefinitions';
 
 /**
  * NewQuestLog · 像素古籍风任务日志
@@ -64,6 +69,12 @@ export function NewQuestLog() {
     );
   }, [states]);
   useCountdownTick(open && hasActiveCountdown);
+
+  // Q1 · Wave 2.5.A.4 · 跟踪刚收到的投票（用于 fresh 动画）
+  const freshVotes = useFreshVotes(open);
+
+  // Q1 · Wave 2.5.A.4 · 监听 quest-finalized 触发 quorum toast
+  const { quorumPayload, clearQuorum } = useQuorumEvent(open);
 
   // ESC 关闭（依次：申诉 modal → 提交表单 → 整个面板）
   useEffect(() => {
@@ -293,7 +304,7 @@ export function NewQuestLog() {
                 onAppeal: () => setAppealingQuestId(quest.id),
               });
 
-              const extra = renderExtra({ status, state });
+              const extra = renderExtra({ status, state, freshVotes });
 
               return (
                 <QuestCard
@@ -320,6 +331,20 @@ export function NewQuestLog() {
           quest={appealingQuest}
           state={appealingState}
           onClose={() => setAppealingQuestId(null)}
+        />
+      )}
+
+      {/* Q1 · Wave 2.5.A.4 · Quorum toast */}
+      {quorumPayload && (
+        <QuorumToast
+          questTitle={
+            ALL_QUESTS.find((q) => q.id === quorumPayload.taskId)?.title ??
+            quorumPayload.questTitle
+          }
+          finalCoeff={quorumPayload.finalCoeff}
+          cpEarned={quorumPayload.cpEarned}
+          triggerKey={quorumPayload.triggerKey}
+          onComplete={clearQuorum}
         />
       )}
     </>
@@ -383,9 +408,11 @@ function renderActions({
 function renderExtra({
   status,
   state,
+  freshVotes,
 }: {
   status: QuestStatus;
   state: QuestState | undefined;
+  freshVotes: Set<number>;
 }) {
   if (!state) return null;
 
@@ -427,7 +454,7 @@ function renderExtra({
           }}
         >
           <span>自评 x{state.selfRated}</span>
-          <span>已收到 {voteCount}/3 票</span>
+          
           {remainingSec > 0 && (
             <span style={{ color: 'var(--gold)' }}>
               可撤回 <strong className="mono">{remainingSec}s</strong>
@@ -438,7 +465,10 @@ function renderExtra({
           )}
         </div>
 
-        {/* 已收到的投票（紧凑列表） */}
+                {/* 审核进度条 · Wave 2.5.A.4 */}
+        <ReviewProgressBar current={voteCount} total={3} />
+
+{/* 已收到的投票（紧凑列表） */}
         {voteCount > 0 && state.votes && (
           <div style={{ marginTop: 10 }}>
             <div className="t-eyebrow" style={{ fontSize: 9, marginBottom: 4 }}>
@@ -448,6 +478,7 @@ function renderExtra({
               <ReviewerVoteCard
                 key={vote.reviewerId + vote.votedAt}
                 vote={vote}
+                isFresh={freshVotes.has(vote.votedAt)}
               />
             ))}
           </div>

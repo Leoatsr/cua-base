@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { ReviewerVote, QualityCoeff } from '../lib/reviewers';
 import { Chip } from '../ui';
 
@@ -13,19 +14,35 @@ const COEFF_TONE: Record<QualityCoeff, 'spring' | 'gold' | 'danger' | ''> = {
   2.0: 'gold',
 };
 
+const FRESH_DURATION_MS = 1200;
+
 interface ReviewerVoteCardProps {
   vote: ReviewerVote;
+  /** 是否刚收到（最近 1.2s 内）· 触发滑入 + 金光晕 */
+  isFresh?: boolean;
 }
 
 /**
- * 已收到的审核员投票 chip（紧凑版）
+ * 已收到的审核员投票卡（Wave 2.5.A.4 升级版）
  *
- * Wave 2.5.A.3 · 仅静态显示
- * Wave 2.5.A.4 · 加 chip 滑入动画 + 金光晕
+ * Fresh 模式：从右滑入 + 金光晕 (cubic-bezier 弹回)
+ * Static 模式：直接显示 · 无动画
  */
-export function ReviewerVoteCard({ vote }: ReviewerVoteCardProps) {
+export function ReviewerVoteCard({ vote, isFresh = false }: ReviewerVoteCardProps) {
+  // Fresh 状态短暂存在 · 1.2s 后清掉防止重复触发
+  const [stillFresh, setStillFresh] = useState(isFresh);
+
+  useEffect(() => {
+    if (!isFresh) return;
+    const timer = setTimeout(() => setStillFresh(false), FRESH_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [isFresh]);
+
+  const animClass = stillFresh ? 'vote-card-fresh' : '';
+
   return (
     <div
+      className={animClass}
       style={{
         display: 'flex',
         gap: 8,
@@ -34,6 +51,9 @@ export function ReviewerVoteCard({ vote }: ReviewerVoteCardProps) {
         border: '1px solid var(--wood-2)',
         marginBottom: 4,
         alignItems: 'flex-start',
+        boxShadow: stillFresh
+          ? '2px 2px 0 var(--wood-4)'
+          : 'none',
       }}
     >
       <div
@@ -82,4 +102,40 @@ export function ReviewerVoteCard({ vote }: ReviewerVoteCardProps) {
       </div>
     </div>
   );
+}
+
+// CSS 注入（一次性）
+let stylesInjected = false;
+if (typeof document !== 'undefined' && !stylesInjected) {
+  stylesInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+@keyframes voteCardSlideIn {
+  0% {
+    transform: translateX(120%) rotate(8deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-8px) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes voteCardGlow {
+  0% { box-shadow: 2px 2px 0 var(--wood-4), 0 0 0 0 var(--gold); }
+  50% { box-shadow: 2px 2px 0 var(--wood-4), 0 0 24px 4px var(--gold); }
+  100% { box-shadow: 2px 2px 0 var(--wood-4), 0 0 0 0 var(--gold); }
+}
+
+.vote-card-fresh {
+  animation:
+    voteCardSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+    voteCardGlow 1.2s ease-out;
+}
+`;
+  document.head.appendChild(style);
 }
