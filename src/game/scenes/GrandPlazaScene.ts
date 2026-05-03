@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { bgmManager } from '../bgmManager';
 import { EventBus } from '../EventBus';
 import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
@@ -195,8 +196,9 @@ export class GrandPlazaScene extends Phaser.Scene {
 
     // ---- BGM ----
     if (this.cache.audio.exists('bgm-village')) {
-      this.bgm = this.sound.add('bgm-village', { loop: true, volume: BGM_VOLUME });
-      this.bgm.play();
+      // Wave 10.bgm-fix: 走全局单例 · 不再每个 scene 自己 add
+      bgmManager.play(this, 'bgm-village', BGM_VOLUME);
+      // this.bgm.play(); // moved into bgmManager
     }
 
     // ---- World map travel listener ----
@@ -214,7 +216,7 @@ export class GrandPlazaScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       EventBus.off('world-map-travel', onTravel);
-      this.bgm?.stop();
+      // this.bgm?.stop(); // moved into bgmManager
     });
   }
 
