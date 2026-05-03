@@ -12,7 +12,6 @@ import {
   useProfile,
   useCV,
   useLevel,
-  useGameTime,
   useOnlineCount,
 } from '../hooks';
 import { EventBus } from '../game/EventBus';

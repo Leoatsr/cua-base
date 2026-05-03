@@ -3,8 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PhaserGame } from './game/PhaserGame';
 import { DialogueBox } from './components/DialogueBox';
 import { TitleScreen } from './components/TitleScreen';
-import { QuestPanel } from './components/QuestPanel';
-import { TitleList } from './components/TitleList';
 import { WorldMap } from './components/WorldMap';
 import { ReviewProcessor } from './components/ReviewProcessor';
 import { ReviewPanel } from './components/ReviewPanel';
@@ -58,7 +56,6 @@ import { LandingPage } from './pages/Landing';
 import { ManualPage } from './pages/ManualPage';
 import { CodexPage } from './pages/CodexPage';
 import { MapsPage } from './pages/MapsPage';
-import { GameViewPreview } from './pages/GameViewPreview';
 import { NewGameAppHUD } from './pages/NewGameAppHUD';
 import { NewChatPanel } from './components/NewChatPanel';
 import { NewMailBox } from './components/NewMailBox';
@@ -299,7 +296,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/play" element={<MainGameApp />} />
-        <Route path="/play-new" element={<GameViewPreview />} />
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/codex" element={<CodexPage />} />
         <Route path="/maps" element={<MapsPage />} />

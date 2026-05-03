@@ -22,9 +22,6 @@ interface UserStats {
   level_name: string;
 }
 
-const LEVEL_COLORS: Record<number, string> = {
-  0: '#9ca3af', 1: '#60a5fa', 2: '#a78bfa', 3: '#fbbf24', 4: '#dc2626',
-};
 
 /**
  * F4.2 · 公开页 /u/:username
