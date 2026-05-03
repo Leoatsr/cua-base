@@ -50,3 +50,15 @@ canvas {
 button[style*="bottom: 16"][style*="right: 16"] {
   display: none !important;
 }
+
+
+/* ==========================================================
+   Wave 9.scrollfix - allow document pages to scroll
+   (Landing / PublicProfilePage / ManualPage / CodexPage / MapsPage)
+   #root previously locked overflow:hidden along with html/body.
+   Now keep html/body locked (no double scrollbar) but unlock #root.
+   PhaserGame is fixed/absolute inset:0 so game page is unaffected.
+   ========================================================== */
+#root {
+  overflow: auto !important;
+}

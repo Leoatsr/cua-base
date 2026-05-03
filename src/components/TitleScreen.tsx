@@ -9,13 +9,17 @@ interface TitleScreenProps {
 /**
  * TitleScreen — 启动页 · Wave 9 重构
  *
- * 风格对齐 Claude Design 落地页 (Landing.tsx) ——
- * 米黄羊皮纸 + 暖木褐 + 像素字 + Banner / PixelButton / Chip / Sprite
- * 不再用黑绿径向渐变 · 不再用系统无衬线字
+ * Wave 9.titlescreen · 风格对齐 Claude Design 落地页
+ *   米黄羊皮纸 + 暖木褐 + 像素字 + Banner / PixelButton / Chip / Sprite
+ *
+ * Wave 9.titlebutton · 修登录按钮不可见 bug
+ *   原版用 {authEnabled && !loading && (...)} 包整块 · 任一为 falsy 就整块隐藏。
+ *   现版总是渲染登录区 · 状态由 user 决定 (null = 按钮 / 否 = Chip)。
+ *   即使 supabase 不可用 · 按钮也会显示 (signIn 调用会自然失败)。
  */
 export function TitleScreen({ onStart }: TitleScreenProps) {
   const [fadeOut, setFadeOut] = useState(false);
-  const { user, loading, authEnabled, signIn } = useAuth();
+  const { user, signIn } = useAuth();
 
   const handleStart = () => {
     if (fadeOut) return;
@@ -85,7 +89,7 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         降噪 · 链接 · 共创
       </div>
 
-      {/* 装饰条 —— 4px 暖木褐 (替代原 1px 灰白线) */}
+      {/* 装饰条 —— 4px 暖木褐 */}
       <div
         style={{
           width: 'clamp(80px, 12vw, 160px)',
@@ -124,55 +128,56 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
         v1.1 · 共创之都 · 审核闭环
       </div>
 
-      {/* GitHub 登录区 —— PixelButton + Chip · 跟官网风一致 */}
-      {authEnabled && !loading && (
-        <div
-          style={{
-            marginTop: 36,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 12,
-            animation: 'tsFadeIn 2.4s ease-out',
-          }}
-        >
-          {user ? (
-            <Chip tone="spring">
-              ✓ 已以 {user.displayName} 登录
-            </Chip>
-          ) : (
-            <PixelButton
-              variant="pb-primary"
-              size="pb-lg"
-              onClick={signIn}
-            >
-              <Sprite name="leaf" scale={3} />
-              &nbsp;&nbsp;GitHub 登录进入
-            </PixelButton>
-          )}
-          <div
-            className="t-eyebrow"
-            style={{
-              fontSize: 9,
-              textAlign: 'center',
-              maxWidth: 300,
-              lineHeight: 1.8,
-              opacity: 0.65,
+      {/* GitHub 登录区 —— Wave 9.titlebutton 总是渲染 · 不依赖 authEnabled/loading */}
+      <div
+        style={{
+          marginTop: 36,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          animation: 'tsFadeIn 2.4s ease-out',
+        }}
+      >
+        {user ? (
+          <Chip tone="spring">
+            ✓ 已以 {user.displayName} 登录
+          </Chip>
+        ) : (
+          <PixelButton
+            variant="pb-primary"
+            size="pb-lg"
+            onClick={(e?: React.MouseEvent) => {
+              e?.stopPropagation();
+              signIn();
             }}
           >
-            {user
-              ? '登录信息会用于未来的多人 / 跨设备同步'
-              : '登录是可选的 — 不登录也能完整玩'}
-          </div>
+            <Sprite name="leaf" scale={3} />
+            &nbsp;&nbsp;GitHub 登录进入
+          </PixelButton>
+        )}
+        <div
+          className="t-eyebrow"
+          style={{
+            fontSize: 9,
+            textAlign: 'center',
+            maxWidth: 300,
+            lineHeight: 1.8,
+            opacity: 0.65,
+          }}
+        >
+          {user
+            ? '登录信息会用于未来的多人 / 跨设备同步'
+            : '登录是可选的 — 不登录也能完整玩'}
         </div>
-      )}
+      </div>
 
       {/* 按任意键提示 —— 暖木褐呼吸 */}
       <div
         onClick={handleStart}
         className="t-eyebrow"
         style={{
-          marginTop: authEnabled ? 36 : 64,
+          marginTop: 36,
           fontSize: 'clamp(11px, 1.3vw, 14px)',
           color: 'var(--wood-3)',
           letterSpacing: '0.3em',
