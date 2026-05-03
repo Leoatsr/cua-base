@@ -29,16 +29,16 @@ export function PhaserGame() {
     gameRef.current = new Phaser.Game({
       type: Phaser.AUTO,
       parent: containerRef.current,
-      width: 1280,
-      height: 720,
+      width: window.innerWidth,
+      height: window.innerHeight,
       pixelArt: true,
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#fdf0cf',
       physics: {
         default: 'arcade',
         arcade: { gravity: { x: 0, y: 0 }, debug: false },
       },
       scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
       scene: [

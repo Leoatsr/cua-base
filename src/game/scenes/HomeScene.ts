@@ -1,3 +1,4 @@
+import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
 import { EventBus } from '../EventBus';
 import { getFaceLocal, type FaceData } from '../../lib/faceStore';
@@ -87,6 +88,7 @@ export class HomeScene extends Phaser.Scene {
   }
 
   create() {
+    attachMinimap(this, 'HomeScene');
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 

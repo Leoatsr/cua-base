@@ -1,3 +1,4 @@
+import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
 import { NPC } from '../entities/NPC';
 import { SignPost } from '../entities/SignPost';
@@ -262,6 +263,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   create() {
+    attachMinimap(this, 'MainScene');
     // ---- Tilemap ----
     const map = this.make.tilemap({ key: 'sproutown' });
     const tileset = map.addTilesetImage('tiles', 'tiles');

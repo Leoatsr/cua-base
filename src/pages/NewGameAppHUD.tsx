@@ -17,6 +17,8 @@ import {
   useOnlineCount,
 } from '../hooks';
 import { EventBus } from '../game/EventBus';
+import type { MinimapPayload } from '../game/minimap-bridge';
+import { getRealSolarTerm } from '../lib/realSolarTerm';
 
 /**
  * NewGameApp · /play 路由替换 MainGameApp 视觉部分
@@ -57,6 +59,21 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
   const online = useOnlineCount();
   const realClock = useRealClock();
 
+  // Wave 7.K real solar term
+  const [realTerm, setRealTerm] = useState(() => getRealSolarTerm(new Date()));
+  useEffect(() => {
+    const id = setInterval(() => setRealTerm(getRealSolarTerm(new Date())), 60 * 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Wave 7.K · minimap 真实数据 (订阅 scene emit)
+  const [minimapData, setMinimapData] = useState<MinimapPayload | null>(null);
+  useEffect(() => {
+    const handler = (data: MinimapPayload) => setMinimapData(data);
+    EventBus.on('minimap-update', handler);
+    return () => { EventBus.off('minimap-update', handler); };
+  }, []);
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -80,61 +97,6 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
 
   return (
     <>
-      {/* 顶部中心 — 在线人数 chip */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 12,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 60,
-          pointerEvents: 'auto',
-        }}
-      >
-        <div
-          title={`全服在线 ${online.global} 人 · 此场景 ${online.scene} 人`}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '8px 16px',
-            background: 'var(--paper-1, #fdf0cf)',
-            border: '3px solid var(--wood-3, #8b4513)',
-            boxShadow:
-              '0 0 0 3px var(--wood-4, #5d3a1a), inset -2px -2px 0 var(--paper-shadow, #c9a55b), inset 2px 2px 0 var(--paper-0, #fff8dc)',
-            fontFamily: 'var(--f-pixel, "VT323", "Courier New", monospace)',
-            fontSize: 14,
-            color: 'var(--wood-3, #8b4513)',
-            letterSpacing: '0.05em',
-            userSelect: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#7fc090',
-              boxShadow: '0 0 6px #7fc090, 0 0 2px #fff',
-              flexShrink: 0,
-            }}
-          />
-          <span style={{ fontSize: 10, color: 'var(--wood-2, #a0522d)', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 500 }}>
-            ONLINE
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--ink-soft, #6b4f33)', letterSpacing: '0.1em' }}>全服</span>
-            <strong style={{ fontSize: 16, color: 'var(--wood-3, #8b4513)', fontWeight: 700 }}>{online.global}</strong>
-          </span>
-          <span style={{ color: 'var(--paper-shadow, #c9a55b)' }}>·</span>
-          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={{ fontSize: 10, color: 'var(--ink-soft, #6b4f33)', letterSpacing: '0.1em' }}>此地</span>
-            <strong style={{ fontSize: 16, color: 'var(--gold, #daa520)', fontWeight: 700 }}>{online.scene}</strong>
-          </span>
-        </div>
-      </div>
-
       {/* 左上 — 头像 panel + ▼ */}
       <div
         style={{
@@ -195,7 +157,7 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
         }}
       >
         <TopRightChips
-          solarTerm={gameTime.solarTerm}
+          solarTerm={realTerm}
           clockTime={realClock.clockTime}
           daypart={realClock.daypart}
           onlineCount={online.global}
@@ -213,32 +175,12 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
         }}
       >
         <Minimap
-          sceneName="萌芽镇"
-          playerX={45}
-          playerY={55}
-          landmarks={[
-            { x: 30, y: 30, w: 40, h: 20, color: '#daa520' },
-            { x: 20, y: 60, w: 30, h: 15, color: '#cd853f' },
-          ]}
-          road={{ y: 50 }}
-        />
-      </div>
-
-      {/* 左中 — 当前任务 */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 110,
-          left: 12,
-          zIndex: 50,
-          width: 280,
-          pointerEvents: 'auto',
-        }}
-      >
-        <QuestCard
-          title="未接取任务"
-          description="靠近任意工坊主，按 E 接取任务。Phase 2.5 上线后将自动从 GitHub Issues 拉取真实贡献任务。"
-          workshopName="Phase 2.5 待接入"
+          sceneName={minimapData?.sceneName ?? '...'}
+          worldWidth={minimapData?.worldWidth}
+          worldHeight={minimapData?.worldHeight}
+          player={minimapData?.player}
+          landmarks={minimapData?.landmarks ?? []}
+          road={minimapData?.road}
         />
       </div>
 

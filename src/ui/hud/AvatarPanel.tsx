@@ -9,6 +9,8 @@ interface AvatarPanelProps {
 /**
  * 左上 — 玩家头像 + 名字 + 等级
  *
+ * Wave 7.K · 加 minWidth: 220 跟右侧 CVBar 一致
+ *
  * 用法：
  *   <AvatarPanel name="Gaoliang" level="L1 · 活跃贡献者" />
  */
@@ -21,6 +23,7 @@ export function AvatarPanel({ name, level, spriteScale = 2 }: AvatarPanelProps) 
         display: 'flex',
         gap: 10,
         alignItems: 'center',
+        minWidth: 220,
       }}
     >
       <div
