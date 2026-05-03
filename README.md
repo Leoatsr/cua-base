@@ -1,221 +1,124 @@
-# Wave 5.A.1 · 萌芽镇 · 设计稿照搬 + NPC 散布重定位
+# CUA Base
 
-UI 重构第 5 波 · 第 1 步 — **新 sproutown.json + 5 NPC 重定位**
+一座给 WebAgentLab 社区成员"过日子"的小镇。
 
----
+不是产品，不是工具，也不是 demo。这里有镇子、有阁楼、有论坛、有工坊，社区成员可以在这里走动、对话、留言、看公告、查论文、记录贡献。
 
-## ⚠️ 这是破坏性改动 · 必须仔细读
-
-跟 Wave 1-4 不同 · 本波**改了游戏功能层**：
-- 替换 `sproutown.json` · 新 tilemap（设计稿照搬）
-- 移动 5 NPC 坐标
-- 移动 3 个门触发器
-- **删除铁匠铺内景入口**（玩家不能进铁匠铺了 · 只能在外面对话铁匠老周）
-- **删除玩家"自家"入口**（C10 home door · 设计稿没空间）
-
-后续 Wave 5.A.2 / 5.A.3 才会做完整测试 + 教程指引修复。
+**在线访问**：[cua-yuanye-spike.vercel.app](https://cua-yuanye-spike.vercel.app)
 
 ---
 
-## 这一波做了什么
+## 这是什么
 
-### 1. 新 sproutown.json · 完全照搬设计稿
+CUA Base 是一个像素风格的 2D 多人在线小镇，承载 WebAgentLab 社区的日常活动：发布动态、查阅论文、记录贡献、参与议政。
 
-设计稿 `SPROUTOWN_MAP` 是 24×14 字符串：
+世界观由几个核心区域构成：**萌芽镇**（新人入村的第一站）、**共创之都**（九大工坊环绕中央广场）、**议政高地**（治理中心）、**大集会广场**（年度大会的舞台）。每个区域既有视觉上的呼应，也有功能上的承载——比如典籍阁里能查 800+ 篇论文索引，铁匠铺墙上挂着每日热点榜，议政高地的远见塔能远望整个社区的未来规划。
 
-```
-GGGGGGGGGGGGGGGGGGGGGGGG     ← 行 0 全草
-GGTTTGGGGGGGGGGGGGGTTTGG     ← 行 1: 左 3 树 + 右 3 树
-GGGGGGGPPPPPPPPGGGGGGGGG     ← 行 2: 上方屋外圈路
-GGGGGGGPHHHHHHPGGGTTGGGG     ← 行 3: 屋顶（金黄）
-GGTGGGGPHWWWWHPGGGGGGGGG     ← 行 4: 屋墙 + 内装饰水
-GGGGGGGPHHDHHHPGGGGGGGGG     ← 行 5: 门（D 在 col 10）
-GGGGGGGPPPPPPPPGGGGGGGGG     ← 行 6: 屋外圈路
-GGGGRRRRRRRRRRRRRRRGGGGG     ← 行 7: 横贯石板路
-GGGGGGGGGGGGGGGGGGGGTTGG     ← 行 8: 右侧 2 树
-GGGGGGGPPPPPPPPGGGGGGGGG     ← 行 9: 下方屋外圈路
-GGTGGGGPSSSSSSPGGGGGGGTG     ← 行 10: 屋顶（石板色）
-GGGGGGGPSDSSSSPGGGGGGGTG     ← 行 11: 门（D 在 col 9）
-GGGGGGGPPPPPPPPGGGGGGGGG     ← 行 12: 屋外圈路
-GGGGGGGGGGGGGGGGGGGGGGGG     ← 行 13 全草
-```
-
-**居中放在 30×20 grid**（OFF_X=3, OFF_Y=3）→ 兼容现有 tileset (32×32 px tile)
-
-### 2. 5 NPC 散布（方案 1）
-
-| NPC | 旧 tile | 新 tile | 备注 |
-|---|---|---|---|
-| 阿降 | (13, 6) | **(13, 9)** | 上方屋门正下方 |
-| 蓁（图书管理员）| (21, 6) | **(16, 8)** | 上方屋门右侧 |
-| 老周（铁匠）| (5, 15) | **(16, 12)** | 横贯路下方 · 路边铁匠摊（无屋）|
-| 阿满（商人）| (15, 14) | **(21, 10)** | 横贯石板路右端 |
-| 默（钓鱼老人）| (24, 17) | **(26, 16)** | 右下空地 |
-| 司影（魔镜匠）| (10, 14) | **(4, 12)** | 左下空地 |
-
-### 3. 3 个门触发器重定位
-
-| 门 | 旧 tile | 新 tile |
-|---|---|---|
-| 阿降小屋 | (13, 5) | **(13, 8)** |
-| 典籍阁 | (21, 5) | **(12, 14)** |
-| 共创之都港口 | (1, 10) | **(28, 18)** |
-
-### 4. 移除的功能
-
-- **铁匠铺内景入口** · 老周变成"路边对话 NPC"（不进屋）
-- **玩家自家"回家"门**（C10 home door）· 设计稿没空间
-
-### 5. 告示板坐标 · (11, 11) → (15, 11)
+新人从萌芽镇入场，老村长阿降会引导认识社区拓扑。走熟之后可以传送到任何已解锁的区域。
 
 ---
 
-## 文件清单
+## 怎么进去
 
-```
-🆕 public/assets/maps/sproutown.json   (新 tilemap · 设计稿照搬)
-🔄 src/game/scenes/MainScene.ts        (NPC 坐标 + 门坐标 + 删 BLACKSMITH/enterHome)
-```
+### 在线（推荐）
 
----
+直接打开：**[cua-yuanye-spike.vercel.app](https://cua-yuanye-spike.vercel.app)**
 
-## 安装
+支持 GitHub 登录后保存进度、自定义角色面部、获得 CV（贡献价值）积分。
 
-```powershell
-cd D:\projects\cua-base
+### 本地运行
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave5a1.zip"
-Test-Path $zip
-
-# 备份现有 sproutown.json + MainScene.ts
-mkdir -p D:\projects\backup-cua\wave5a1
-Copy-Item public\assets\maps\sproutown.json D:\projects\backup-cua\wave5a1\sproutown.json.bak -Force
-Copy-Item src\game\scenes\MainScene.ts D:\projects\backup-cua\wave5a1\MainScene.ts.bak -Force
-
-tar -xf $zip
-Copy-Item -Path .\cua-spike-wave5a1\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave5a1 -Recurse -Force
-
-# 验证
-Test-Path public\assets\maps\sproutown.json
-Test-Path src\game\scenes\MainScene.ts
-```
-
-期望 2 个 `True`。
-
----
-
-## ⚠️ 必须重启 dev server（改了 Phaser 资源）
-
-```powershell
-# Ctrl+C 杀掉 pnpm dev
+```bash
+git clone https://github.com/Leoatsr/cua-base.git
+cd cua-base
+pnpm install
 pnpm dev
 ```
 
-⚠️ **强烈建议浏览器开 F12 + 硬刷新**（Ctrl+Shift+R）· 否则 Phaser 缓存旧 JSON。
+打开 `http://localhost:5173/` 即可。本地模式下登录功能受限（需配置 Supabase env），但单机探索没问题。
 
 ---
 
-## 测试清单
+## 镇上有什么
 
-```
-☐ 1. 打开 /play · 看到萌芽镇新地图（设计稿布局）
-☐ 2. 上方屋（阿降小屋）金顶 · 屋内有蓝色装饰水
-☐ 3. 下方屋（典籍阁）灰顶（石板）
-☐ 4. 横贯石板路 row 10 (像素 y=336)
-☐ 5. 6 NPC 都看得到 · 阿降在上方屋门下 / 蓁在阿降右侧 / 老周在路下 / 阿满在路右 / 默在右下 / 司影在左下
-☐ 6. 走到上方屋门口 (13,8) · 提示 "[E] 进入阿降的小屋" · 按 E 进屋 OK
-☐ 7. 走到下方屋门口 (12,14) · 提示 "[E] 进入典籍阁" · 按 E 进屋 OK
-☐ 8. 走到地图右下 (28,18) · 提示 "[E] 前往共创之都" · 按 E 跳场景 OK
-☐ 9. 接近铁匠老周 · 按 E 对话（不进屋 · 直接路边对话）OK
-☐ 10. 5 新手任务 · 阿降首次对话开始 · OK
-☐ 11. 4 errand 任务（找蓁/老周/阿满/默）· 全可触发对话 OK
-☐ 12. 告示板 (15, 11) · 接近 + E 显示告示
-☐ 13. 3 朵花散布（左上 / 右上 / 右中）· 玩家走过去自动收集
-☐ 14. 教程指引 · 仍说"走到老村长身边"（位置变了但描述对）
-```
+### 萌芽镇
 
----
+新人入村的第一站。地势开阔，村中央是老村长阿降的宅子，旁边是典籍阁、铁匠铺，再往北是玩家的"自家小屋"。
 
-## ⚠️ 已知问题（留给后续 Wave）
+- **阿降村长小屋**：北墙挂着社区拓扑图和 9 工坊名册，案台前能听阿降讲讲社区源流。
+- **典籍阁**：5×3 抽屉的检索目录柜（按工坊/会议/年代分类），双侧满墙书架，长读书桌前 3 盏铜灯可调亮。馆员百晓青衫玄帽，能帮你找论文。
+- **铁匠铺**：双火炉常燃，中央铁砧，西墙工具墙挂着锤钳剪。北墙右侧是"每日热点榜"，铁匠阿炎会跟你聊社区最近的响动。
+- **自家小屋**：暖橙顶梁。北墙挂着 5 框纪念墙（待铭刻历史任务）、西墙是床、中央书桌、东南角壁炉。
 
-### 1. 铁匠铺内景没了
-- 现状：玩家无法进铁匠铺看到老周打铁场景
-- 影响：blacksmith 任务可能不能正常进行（如果任务依赖进屋）
-- ⚠️ 测试时关注 · 可能需要 Wave 5.A.2 修复
+### 共创之都
 
-### 2. 玩家"回家"功能没了
-- 现状：玩家不能按 E 回家（HomeScene）
-- 影响：HomeScene 仍存在但访问不到
-- ⚠️ 如果你之前用过这个 · 现在不能用了
+九大工坊环绕中央喷泉广场，是 CUA 工作组的物理化身。
 
-### 3. 教程引导文案没改
-- `tutorialSteps.ts` 仍说"走到老村长阿降身边"
-- 实际位置变了 · 但教程描述还能用（不需要改）
+每个工坊有自己的色调和功能：开源楼、播宫、测评工坊、招聘亭、数据工坊、会议工坊、百晓居、内参所、生态工坊（功德堂）。功德堂是社区贡献的纪念地，能看到 CV 排行的实时数据。
 
-### 4. 道路网络问题
-- 设计稿只有 row 10 的横贯石板路
-- 玩家想从一栋屋走到另一栋 · 必须**先回到石板路**
-- 可能感觉绕路
+### 议政高地
 
-### 5. 萌芽镇范围变小
-- 实际可玩区域局限在 24×14（720×448 像素）
-- 周围 3 行 / 3 列是空草地
-- 可能感觉地图大但内容少
+社区治理中心，三阁矗立：
+
+- **远见塔（Vision Tower）**：远望整个社区的未来规划与沙盘。
+- **执政厅（Council Hall）**：议事场所，提案与表决。
+- **明镜阁（Mirror Pavilion）**：申诉与复议的去处。
+
+### 大集会广场
+
+年度大会的舞台。平时空旷，活动时万人云集。
 
 ---
 
-## ⚠️ 紧急回滚
+## 怎么玩
 
-```powershell
-Copy-Item D:\projects\backup-cua\wave5a1\sproutown.json.bak public\assets\maps\sproutown.json
-Copy-Item D:\projects\backup-cua\wave5a1\MainScene.ts.bak src\game\scenes\MainScene.ts
-```
+| 按键 | 功能 |
+|---|---|
+| W A S D / 方向键 | 移动 |
+| E | 互动（对话 / 进门 / 看招牌） |
+| M | 打开 CUA Base 地图（点 POI 传送） |
+| J | 任务日志 |
+| K | 邮件 |
 
----
+走近 NPC、招牌、互动物时屏幕会浮出 `[E]` 提示。按 E 触发对应操作。
 
-## Push
-
-```powershell
-git add .
-git commit -m "Wave 5.A.1: Sproutown design-aligned tilemap + NPC repositioning
-
-New sproutown.json (24x14 design map centered in 30x20 grid):
-- 2 cottages: upper (gold roof) + lower (stone roof)
-- Stone road row 10 (横贯)
-- 5 trees scattered, 1 decorative water tile
-
-NPC repositioning (Plan 1: distributed):
-- Axiang: tile (13,9) - upper cottage door
-- Librarian: tile (16,8) - right of upper cottage
-- Blacksmith: tile (16,12) - roadside stall (no enterable forge)
-- Merchant: tile (21,10) - east end of stone road
-- Fisher: tile (26,16) - bottom-right
-- Mirror: tile (4,12) - bottom-left
-
-Door triggers repositioned:
-- Axiang cottage: (13,8)
-- Librarian library: (12,14) - now lower cottage
-- Sprout City port: (28,18) - moved from west to east
-
-Removed:
-- BLACKSMITH_FORGE_CONFIG (no enterable forge in design)
-- enterHome / Player home door (no space in design)
-
-Wave 5.A.2 next: tutorialSteps update + full quest flow testing
-Wave 5.A.3 next: bug fixes + polish"
-
-git push
-```
+打开地图时，鼠标悬停 POI 能看到目的地详情；当前所在区域有金色脉冲圈标识。
 
 ---
 
-## 下一步
+## 当前进度
 
-回我**一个**：
+CUA Base 处于早期验证阶段。
 
-- **"看到了 · 装好了 · push + 进 Wave 5.A.2 (教程修复 + 测试)"**
-- **"装上有问题 X"** + 描述 + F12 截图
-- **"白屏 / 黑屏"** + F12 截图（可能 Phaser tilemap 加载失败）
-- **"回滚 · 不喜欢"** = 跑紧急回滚命令
-- **"暂停 · 找用户测"** ✅ 我推荐
+- 真实用户数：0（你可以是第一个）
+- 主要内容：4 大区域 + 4 间内景 + 9 工坊框架已就位，互动剧情和 NPC 对话还在持续填充
+- 数据接入：CV 贡献价值系统已上线，纪念墙、热点榜等数据钩子已留好待对接
+- 多人在线：基于 Supabase Realtime 的 presence 同步，看得到同时在线的其他玩家位置
+
+欢迎进来转一圈、提反馈、贡献剧情或代码。
+
+---
+
+## 一起搭
+
+- **GitHub Issues**：[github.com/Leoatsr/cua-base/issues](https://github.com/Leoatsr/cua-base/issues) — 报 bug、提建议、贴你想看到的剧情或工坊
+- **Discussions**：开放讨论世界观设定、9 工坊功能扩展、社区治理机制
+- **Pull Requests**：欢迎贡献新场景、NPC 对白、像素美术、互动玩法
+
+游戏内"明镜阁"也接受社区申诉与提案，未来会接入正式的议事流程。
+
+---
+
+## 技术栈
+
+> 这一段供想本地跑或贡献代码的人参考，玩家可以跳过。
+
+React 18 + TypeScript + Vite + Phaser 3 前端；Supabase（Postgres + Realtime + Auth）后端；Vercel 部署。包管理用 pnpm。
+
+具体目录结构、构建脚本、贡献指南详见 [CONTRIBUTING.md](./CONTRIBUTING.md)（待补）。
+
+---
+
+## License
+
+MIT
