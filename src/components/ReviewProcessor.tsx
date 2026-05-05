@@ -1,4 +1,6 @@
 import { useEffect } from 'react';
+import { notifyTaskComplete } from '../lib/discordNotify';
+import { getAuthSnapshot } from '../lib/authStore';
 import { EventBus } from '../game/EventBus';
 import { sendMail } from '../lib/mail';
 import { addCVEntry, computeFinalCoefficient } from '../lib/cv';
@@ -141,6 +143,13 @@ export function ReviewProcessor() {
         finalCoeff,
         cpEarned: entry.cpEarned,
       });
+
+      // === Discord notify · 任务通过 ===
+      try {
+        const user = getAuthSnapshot().user;
+        const username = user?.githubUsername || user?.displayName || '玩家';
+        notifyTaskComplete(username, quest.title, entry.cpEarned);
+      } catch {}
 
       // Toast (let QuestPanel render it via its show-toast handler)
       EventBus.emit('show-toast', {
