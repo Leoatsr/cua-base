@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { notifyLevelUp } from '../lib/discordNotify';
+import { getAuthSnapshot } from '../lib/authStore';
 import { EventBus } from '../game/EventBus';
 import { LEVEL_COLORS } from '../lib/levelStore';
 
@@ -25,6 +27,10 @@ export function LevelUpAnimation() {
     const onUp = (d: LevelUpData) => {
       setData(d);
       setPhase('enter');
+      // === Discord notify · 升级 ===
+      const user = getAuthSnapshot().user;
+      const username = user?.githubUsername || user?.displayName || '玩家';
+      notifyLevelUp(username, d.from, d.to, d.newName, 0);
       // 0.6s scroll unfurl → 3.5s show → 0.6s fade out
       window.setTimeout(() => setPhase('show'), 600);
       window.setTimeout(() => setPhase('exit'), 600 + 3500);

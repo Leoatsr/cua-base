@@ -16,6 +16,7 @@
  */
 
 import { getSupabase, isAuthEnabled } from './supabase';
+import { notifyPlayerJoined } from './discordNotify';
 import type { User } from '@supabase/supabase-js';
 
 export interface AuthUser {
@@ -90,6 +91,22 @@ async function init() {
       loading: false,
       authEnabled: true,
     });
+    // === Discord notify · 新玩家加入 ===
+    if (event === 'SIGNED_IN' && session?.user) {
+      const u = session.user;
+      const createdAt = new Date(u.created_at).getTime();
+      const now = Date.now();
+      // 新用户 = 60 秒内创建的
+      if (now - createdAt < 60_000) {
+        const username = u.user_metadata?.user_name
+          || u.user_metadata?.preferred_username
+          || u.user_metadata?.name
+          || u.email?.split('@')[0]
+          || '新村民';
+        // 简单计数 (不查数据库 · 用 Date 戳模糊数字)
+        notifyPlayerJoined(username, 0);
+      }
+    }
   });
 
   // Process URL hash (if present from OAuth callback)
