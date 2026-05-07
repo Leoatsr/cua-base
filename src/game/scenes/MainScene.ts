@@ -1023,7 +1023,7 @@ export class MainScene extends Phaser.Scene {
 
   private playDialogueSfx() {
     if (this.sfxDialogue) {
-      if (!this.scene.isActive()) return;
+      if (!this.scene || !this.scene.isActive()) return;
       this.sound.play('sfx-dialogue', { volume: SFX_VOLUME });
     }
   }
